@@ -300,9 +300,7 @@
                 dropdownBtn.addEventListener('show.bs.dropdown', () => {
                     if (allNotifs.length > 0) {
                         localStorage.setItem(`notif_read_${userId}`, allNotifs[0].timestamp);
-                        setTimeout(() => {
-                            badge.style.display = 'none';
-                        }, 500);
+                        badge.style.display = 'none';
                     }
                 });
 
