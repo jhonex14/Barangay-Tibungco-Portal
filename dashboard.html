@@ -21,7 +21,7 @@
         <!-- Sidebar -->
         <aside class="bg-primary text-white flex-shrink-0 p-4 shadow-sm" style="width: 280px; position: fixed; height: 100vh; overflow-y: auto;">
             <div class="d-flex align-items-center mb-4">
-                <img src="images/logo.png" alt="Logo" style="width:48px;height:48px;object-fit:contain;border-radius:50%;background:#fff;padding:2px;" class="me-3 shadow-sm">
+                <img src="images/logo.png" alt="Logo" style="width:64px;height:64px;object-fit:contain;border-radius:50%;background:#fff;padding:2px;" class="me-3 shadow-sm">
                 <h5 class="fw-bold mb-0">Admin Panel</h5>
             </div>
             <hr class="border-secondary opacity-50 mb-4">
@@ -81,7 +81,10 @@
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notifBadge">0</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 p-2" style="min-width:320px;" id="notifDropdown">
-                            <li class="px-2 pb-2 border-bottom mb-2"><h6 class="fw-bold mb-0">🔔 Notifications</h6></li>
+                            <li class="px-2 pb-2 border-bottom mb-2 d-flex justify-content-between align-items-center">
+                                <h6 class="fw-bold mb-0">🔔 Notifications</h6>
+                                <button class="btn btn-link btn-sm text-primary text-decoration-none p-0 small" onclick="markAllAsRead()">Mark all as read</button>
+                            </li>
                             <div id="notifList"><li class="px-2 py-1 text-muted small">No new notifications.</li></div>
                         </ul>
                     </div>
@@ -750,16 +753,25 @@
                 return;
             }
 
-            const unreadCount = recentComplaints.filter(c => c.status === 'Pending').length;
-            badge.textContent = unreadCount;
-            badge.classList.toggle('d-none', unreadCount === 0);
-            complaintsBadge.textContent = unreadCount;
+            // Get seen IDs from localStorage
+            const seenIds = JSON.parse(localStorage.getItem('seenNotifIds') || '[]');
+            const pendingComplaints = recentComplaints.filter(c => c.status === 'Pending');
+            
+            // Only count those that are Pending AND not in the seenIds list
+            const newCount = pendingComplaints.filter(c => !seenIds.includes(c.id)).length;
+            
+            badge.textContent = newCount;
+            badge.classList.toggle('d-none', newCount === 0);
+            
+            // The sidebar badge still shows total pending
+            complaintsBadge.textContent = pendingComplaints.length;
 
             notifList.innerHTML = '';
             recentComplaints.forEach(c => {
+                const isSeen = seenIds.includes(c.id) || c.status !== 'Pending';
                 const li = document.createElement('li');
                 li.innerHTML = `
-                    <a class="dropdown-item p-2 rounded-3 mb-1" href="#" onclick="showSection('complaints'); openComplaintModal(${c.id})">
+                    <a class="dropdown-item p-2 rounded-3 mb-1 ${isSeen ? 'opacity-75' : 'bg-light border-start border-primary border-4'}" href="#" onclick="markAsSeen(${c.id}); showSection('complaints'); openComplaintModal(${c.id})">
                         <div class="d-flex align-items-center">
                             <div class="bg-danger-soft text-danger p-2 rounded-circle me-3"><i class="fa-solid fa-triangle-exclamation"></i></div>
                             <div>
@@ -772,6 +784,51 @@
                 notifList.appendChild(li);
             });
         }
+
+        window.markAsSeen = function(id) {
+            let seenIds = JSON.parse(localStorage.getItem('seenNotifIds') || '[]');
+            if (!seenIds.includes(id)) {
+                seenIds.push(id);
+                localStorage.setItem('seenNotifIds', JSON.stringify(seenIds));
+                updateNotifications();
+            }
+        };
+
+        window.markAllAsRead = async function() {
+            const { data } = await supabaseClient.from('complaints').select('id').eq('status', 'Pending');
+            if (data) {
+                const ids = data.map(c => c.id);
+                localStorage.setItem('seenNotifIds', JSON.stringify(ids));
+                updateNotifications();
+            }
+        };
+
+        // Clear badge when dropdown is shown
+        document.getElementById('notifDropdown').parentElement.addEventListener('shown.bs.dropdown', function () {
+            const notifItems = document.querySelectorAll('#notifList a');
+            let seenIds = JSON.parse(localStorage.getItem('seenNotifIds') || '[]');
+            let changed = false;
+
+            notifItems.forEach(item => {
+                // Extract ID from the onclick attribute or data attribute if we had one
+                // Since we used onclick="markAsSeen(${c.id})...", we can parse it
+                const match = item.getAttribute('onclick').match(/markAsSeen\((\d+)\)/);
+                if (match && match[1]) {
+                    const id = parseInt(match[1]);
+                    if (!seenIds.includes(id)) {
+                        seenIds.push(id);
+                        changed = true;
+                    }
+                }
+            });
+
+            if (changed) {
+                localStorage.setItem('seenNotifIds', JSON.stringify(seenIds));
+                // We delay the update slightly so the user sees the blue bars disappear ONLY on next open
+                // or we can update immediately if we want the badge to vanish.
+                updateNotifications();
+            }
+        });
 
         window.openComplaintModal = async function(id) {
             const { data: c, error } = await supabaseClient.from('complaints').select('*').eq('id', id).single();
