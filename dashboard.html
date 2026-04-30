@@ -21,7 +21,7 @@
         <!-- Sidebar -->
         <aside class="bg-primary text-white flex-shrink-0 p-4 shadow-sm" style="width: 280px; position: fixed; height: 100vh; overflow-y: auto;">
             <div class="d-flex align-items-center mb-4">
-                <img src="images/logo.png" alt="Logo" style="width:64px;height:64px;object-fit:contain;border-radius:50%;background:#fff;padding:2px;" class="me-3 shadow-sm">
+                <img src="images/logo.png" alt="Logo" style="width:48px;height:48px;object-fit:contain;border-radius:50%;background:#fff;padding:2px;" class="me-3 shadow-sm">
                 <h5 class="fw-bold mb-0">Admin Panel</h5>
             </div>
             <hr class="border-secondary opacity-50 mb-4">
@@ -81,10 +81,7 @@
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notifBadge">0</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 p-2" style="min-width:320px;" id="notifDropdown">
-                            <li class="px-2 pb-2 border-bottom mb-2 d-flex justify-content-between align-items-center">
-                                <h6 class="fw-bold mb-0">🔔 Notifications</h6>
-                                <button class="btn btn-link btn-sm text-primary text-decoration-none p-0 small" onclick="markAllAsRead()">Mark all as read</button>
-                            </li>
+                            <li class="px-2 pb-2 border-bottom mb-2"><h6 class="fw-bold mb-0">🔔 Notifications</h6></li>
                             <div id="notifList"><li class="px-2 py-1 text-muted small">No new notifications.</li></div>
                         </ul>
                     </div>
@@ -155,8 +152,8 @@
                             <div class="card-header bg-white border-bottom-0 pt-4 px-4">
                                 <h5 class="fw-bold mb-0">Document Requests (Monthly)</h5>
                             </div>
-                            <div class="card-body p-4">
-                                <canvas id="requestsChart" height="200"></canvas>
+                            <div class="card-body p-4 pt-0">
+                                <canvas id="requestsChart" style="max-height: 250px;"></canvas>
                             </div>
                         </div>
                     </div>
@@ -490,7 +487,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             // Get current user from Supabase
-            const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user } } = await supabaseClient.auth.getUser();
 
             if (!user) {
                 window.location.href = 'login.html';
@@ -498,7 +495,7 @@
             }
 
             // Get profile for name and role
-            const { data: profile } = await supabase
+            const { data: profile } = await supabaseClient
                 .from('profiles')
                 .select('full_name, role')
                 .eq('id', user.id)
@@ -511,6 +508,10 @@
 
             document.getElementById('adminName').textContent = profile.full_name.split(' ')[0];
 
+            initDashboard();
+        });
+
+        async function initDashboard() {
             // Load Counts from Supabase
             const { count: resCount } = await supabaseClient.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'resident');
             const { count: reqCount } = await supabaseClient.from('requests').select('*', { count: 'exact', head: true }).eq('status', 'Pending');
@@ -544,6 +545,7 @@
                     tr.innerHTML = `
                         <td class="fw-bold font-monospace text-primary">${req.tracking_id}</td>
                         <td class="fw-semibold">${req.user_name}</td>
+                        <td>${req.type}</td>
                         <td><span class="small ${req.payment_status === 'Paid' ? 'text-success' : 'text-danger'} fw-bold">${req.payment_method} (${req.payment_status})</span></td>
                         <td><span class="badge ${badgeClass} rounded-pill">${req.status}</span></td>
                         <td>
@@ -554,34 +556,72 @@
                 });
             }
 
+            // --- Fetch Data for Charts ---
+            const { data: allRequests } = await supabaseClient.from('requests').select('created_at');
+            const { data: allComplaints } = await supabaseClient.from('complaints').select('category');
+
             // Charts Setup
             const ctx1 = document.getElementById('requestsChart').getContext('2d');
+            
+            // Create Gradient
+            const gradient = ctx1.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(13, 110, 253, 0.8)');
+            gradient.addColorStop(1, 'rgba(13, 110, 253, 0.1)');
+
             new Chart(ctx1, {
                 type: 'bar',
                 data: {
                     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
                     datasets: [{
-                        label: 'Document Requests',
-                        data: [12, 19, 15, 25, 22, requests.length],
-                        backgroundColor: '#0f4c81',
-                        borderRadius: 5
+                        label: 'Requests',
+                        data: [12, 19, 15, 25, 22, (allRequests ? allRequests.length : 0)],
+                        backgroundColor: gradient,
+                        borderColor: '#0d6efd',
+                        borderWidth: 2,
+                        borderRadius: 12,
+                        borderSkipped: false,
+                        hoverBackgroundColor: '#0d6efd',
+                        barThickness: 30
                     }]
                 },
                 options: {
                     responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true } }
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            padding: 12,
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            cornerRadius: 8,
+                            displayColors: false
+                        }
+                    },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true,
+                            grid: { display: true, color: 'rgba(0,0,0,0.05)', drawBorder: false },
+                            ticks: { font: { size: 11, family: 'Inter' }, color: '#94a3b8', stepSize: 5 }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 11, family: 'Inter' }, color: '#94a3b8' }
+                        }
+                    }
                 }
             });
 
             const ctx2 = document.getElementById('complaintsChart').getContext('2d');
             
             // Calculate complaint categories
-            let catCounts = { 'Sanitation': 2, 'Peace & Order': 5, 'Infrastructure': 3, 'Others': 1 };
-            complaints.forEach(c => {
-                if (catCounts[c.category]) catCounts[c.category]++;
-                else catCounts[c.category] = 1;
-            });
+            let catCounts = { 'Sanitation': 0, 'Peace & Order': 0, 'Infrastructure': 0, 'Others': 0 };
+            if (allComplaints) {
+                allComplaints.forEach(c => {
+                    if (catCounts[c.category] !== undefined) catCounts[c.category]++;
+                    else catCounts['Others']++;
+                });
+            }
 
             new Chart(ctx2, {
                 type: 'doughnut',
@@ -601,7 +641,10 @@
                     }
                 }
             });
-        });
+
+            // Initial notifications load
+            updateNotifications();
+        }
 
         // --- Sidebar & Navigation Logic ---
         function showSection(sectionId) {
@@ -737,46 +780,85 @@
         }
 
         async function updateNotifications() {
+            // Fetch recent complaints and recent requests
             const { data: recentComplaints } = await supabaseClient
                 .from('complaints')
                 .select('*')
                 .order('created_at', { ascending: false })
                 .limit(5);
 
+            const { data: recentRequests } = await supabaseClient
+                .from('requests')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(5);
+
             const badge = document.getElementById('notifBadge');
             const complaintsBadge = document.getElementById('complaintsBadge');
+            const requestsBadge = document.getElementById('statRequestsBadge'); // Ensure this element exists if used
             const notifList = document.getElementById('notifList');
             
-            if (!recentComplaints || recentComplaints.length === 0) {
-                notifList.innerHTML = '<li class="px-2 py-2 text-muted small text-center">No new reports.</li>';
+            let allItems = [];
+            if (recentComplaints) {
+                recentComplaints.forEach(c => {
+                    allItems.push({
+                        ...c,
+                        type: 'complaint',
+                        icon: 'fa-triangle-exclamation',
+                        color: 'text-danger',
+                        bgColor: 'bg-danger-soft',
+                        title: `New ${c.category} Report`,
+                        subtitle: `From ${c.user_name}`,
+                        onClick: `showSection('complaints'); openComplaintModal(${c.id})`
+                    });
+                });
+            }
+
+            if (recentRequests) {
+                recentRequests.forEach(r => {
+                    allItems.push({
+                        ...r,
+                        type: 'request',
+                        icon: 'fa-file-invoice',
+                        color: 'text-primary',
+                        bgColor: 'bg-primary-soft',
+                        title: `New ${r.type} Request`,
+                        subtitle: `From ${r.user_name}`,
+                        onClick: `showSection('requests'); openEditModal(${r.id})`
+                    });
+                });
+            }
+
+            // Sort by creation date
+            allItems.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            allItems = allItems.slice(0, 5); // Keep only top 5
+
+            if (allItems.length === 0) {
+                notifList.innerHTML = '<li class="px-2 py-2 text-muted small text-center">No new activity.</li>';
                 badge.classList.add('d-none');
                 return;
             }
 
-            // Get seen IDs from localStorage
-            const seenIds = JSON.parse(localStorage.getItem('seenNotifIds') || '[]');
-            const pendingComplaints = recentComplaints.filter(c => c.status === 'Pending');
+            // Calculate unread (Pending items)
+            const unreadComplaints = (recentComplaints || []).filter(c => c.status === 'Pending').length;
+            const unreadRequests = (recentRequests || []).filter(r => r.status === 'Pending').length;
+            const totalUnread = unreadComplaints + unreadRequests;
+
+            badge.textContent = totalUnread;
+            badge.classList.toggle('d-none', totalUnread === 0);
             
-            // Only count those that are Pending AND not in the seenIds list
-            const newCount = pendingComplaints.filter(c => !seenIds.includes(c.id)).length;
-            
-            badge.textContent = newCount;
-            badge.classList.toggle('d-none', newCount === 0);
-            
-            // The sidebar badge still shows total pending
-            complaintsBadge.textContent = pendingComplaints.length;
+            if (complaintsBadge) complaintsBadge.textContent = unreadComplaints;
 
             notifList.innerHTML = '';
-            recentComplaints.forEach(c => {
-                const isSeen = seenIds.includes(c.id) || c.status !== 'Pending';
+            allItems.forEach(item => {
                 const li = document.createElement('li');
                 li.innerHTML = `
-                    <a class="dropdown-item p-2 rounded-3 mb-1 ${isSeen ? 'opacity-75' : 'bg-light border-start border-primary border-4'}" href="#" onclick="markAsSeen(${c.id}); showSection('complaints'); openComplaintModal(${c.id})">
+                    <a class="dropdown-item p-2 rounded-3 mb-1" href="#" onclick="${item.onClick}">
                         <div class="d-flex align-items-center">
-                            <div class="bg-danger-soft text-danger p-2 rounded-circle me-3"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                            <div class="${item.bgColor} ${item.color} p-2 rounded-circle me-3"><i class="fa-solid ${item.icon}"></i></div>
                             <div>
-                                <div class="fw-bold small">New ${c.category} Report</div>
-                                <div class="text-muted" style="font-size: 11px;">From ${c.user_name} • ${new Date(c.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                                <div class="fw-bold small">${item.title}</div>
+                                <div class="text-muted" style="font-size: 11px;">${item.subtitle} • ${new Date(item.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
                             </div>
                         </div>
                     </a>
@@ -784,51 +866,6 @@
                 notifList.appendChild(li);
             });
         }
-
-        window.markAsSeen = function(id) {
-            let seenIds = JSON.parse(localStorage.getItem('seenNotifIds') || '[]');
-            if (!seenIds.includes(id)) {
-                seenIds.push(id);
-                localStorage.setItem('seenNotifIds', JSON.stringify(seenIds));
-                updateNotifications();
-            }
-        };
-
-        window.markAllAsRead = async function() {
-            const { data } = await supabaseClient.from('complaints').select('id').eq('status', 'Pending');
-            if (data) {
-                const ids = data.map(c => c.id);
-                localStorage.setItem('seenNotifIds', JSON.stringify(ids));
-                updateNotifications();
-            }
-        };
-
-        // Clear badge when dropdown is shown
-        document.getElementById('notifDropdown').parentElement.addEventListener('shown.bs.dropdown', function () {
-            const notifItems = document.querySelectorAll('#notifList a');
-            let seenIds = JSON.parse(localStorage.getItem('seenNotifIds') || '[]');
-            let changed = false;
-
-            notifItems.forEach(item => {
-                // Extract ID from the onclick attribute or data attribute if we had one
-                // Since we used onclick="markAsSeen(${c.id})...", we can parse it
-                const match = item.getAttribute('onclick').match(/markAsSeen\((\d+)\)/);
-                if (match && match[1]) {
-                    const id = parseInt(match[1]);
-                    if (!seenIds.includes(id)) {
-                        seenIds.push(id);
-                        changed = true;
-                    }
-                }
-            });
-
-            if (changed) {
-                localStorage.setItem('seenNotifIds', JSON.stringify(seenIds));
-                // We delay the update slightly so the user sees the blue bars disappear ONLY on next open
-                // or we can update immediately if we want the badge to vanish.
-                updateNotifications();
-            }
-        });
 
         window.openComplaintModal = async function(id) {
             const { data: c, error } = await supabaseClient.from('complaints').select('*').eq('id', id).single();

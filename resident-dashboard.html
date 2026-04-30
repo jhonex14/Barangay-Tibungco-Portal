@@ -17,7 +17,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top shadow-sm">
         <div class="container">
             <a class="navbar-brand fw-bold" href="index.html">
-                <img src="images/logo.png" alt="Logo" style="width:60px;height:60px;object-fit:contain;border-radius:50%;background:#fff;padding:2px;" class="me-2 shadow-sm">Brgy. Tibungco
+                <img src="images/logo.png" alt="Logo" style="width:40px;height:40px;object-fit:contain;border-radius:50%;background:#fff;padding:2px;" class="me-2 shadow-sm">Brgy. Tibungco
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -28,9 +28,28 @@
                     <li class="nav-item"><a class="nav-link" href="services.html">Request Document</a></li>
                     <li class="nav-item"><a class="nav-link" href="complaints.html">Report Issue</a></li>
                 </ul>
-                <div class="ms-lg-3 mt-3 mt-lg-0" id="userMenu">
+            <!-- Right Side: Notifications and User Menu -->
+            <div class="d-flex align-items-center">
+                <!-- Notification Bell -->
+                <div class="dropdown me-2">
+                    <button class="btn btn-light position-relative text-muted" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="notifBtn">
+                        <i class="fa-regular fa-bell fs-5"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notifBadge" style="display:none; font-size: 10px; padding: 3px 6px;">0</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-0" id="notifList" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                        <li class="p-3 border-bottom bg-light">
+                            <h6 class="mb-0 fw-bold">Notifications</h6>
+                        </li>
+                        <div id="notifItems">
+                            <li class="p-4 text-center text-muted small">No new notifications</li>
+                        </div>
+                    </ul>
+                </div>
+
+                <div class="ms-lg-2" id="userMenu">
                     <!-- Populated by app.js -->
                 </div>
+            </div>
             </div>
         </div>
     </nav>
@@ -139,22 +158,6 @@
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-dark text-white py-4 mt-auto">
-        <div class="container text-center text-md-start">
-            <div class="row align-items-center">
-                <div class="col-md-6 mb-3 mb-md-0">
-                    <h5 class="fw-bold mb-1"><i class="fa-solid fa-building-shield text-warning me-2"></i>Barangay Tibungco</h5>
-                    <p class="text-white-50 mb-0 small">Smart Web-Based Management Portal &copy; 2026. All Rights Reserved.</p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <a href="https://www.facebook.com/profile.php?id=100069272167088" target="_blank" class="text-white-50 me-3"><i class="fa-brands fa-facebook fs-5"></i></a>
-                    <a href="mailto:barangaytibungco@gmail.com" class="text-white-50"><i class="fa-solid fa-envelope fs-5"></i></a>
-                </div>
-            </div>
-        </div>
-    </footer>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="app.js"></script>
     <script>
@@ -167,10 +170,11 @@
 
             // Get Profile
             const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', user.id).single();
-
-            document.getElementById('welcomeMsg').textContent = `Welcome back, ${(profile ? profile.full_name : user.email).split(' ')[0]}!`;
+            if (profile) {
+                document.getElementById('welcomeMsg').textContent = `Welcome back, ${profile.full_name.split(' ')[0]}!`;
+            }
             
-            // Load My Requests from Supabase
+            // Load My Requests
             const { data: myRequests } = await supabaseClient
                 .from('requests')
                 .select('*')
@@ -186,11 +190,12 @@
                 noDataMsg.classList.add('d-none');
                 myRequests.forEach(req => {
                     const tr = document.createElement('tr');
-                    
                     let badgeClass = 'bg-secondary';
                     if (req.status === 'Pending') badgeClass = 'bg-warning text-dark';
                     if (req.status === 'Processing') badgeClass = 'bg-primary';
                     if (req.status === 'Ready for Pickup') badgeClass = 'bg-success';
+                    if (req.status === 'Completed') badgeClass = 'bg-dark';
+                    if (req.status === 'Rejected') badgeClass = 'bg-danger';
 
                     tr.innerHTML = `
                         <td class="fw-bold font-monospace text-primary">${req.tracking_id}</td>
@@ -203,12 +208,108 @@
             }
 
             // Update stats
-            const { count: pendingCount } = await supabaseClient.from('requests').select('*', { count: 'exact', head: true }).eq('user_id', user.id).neq('status', 'Completed');
+            const { count: pendingCount } = await supabaseClient.from('requests').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'Pending');
             document.getElementById('pendingRequestsCount').textContent = pendingCount || 0;
             
             const { count: reportCount } = await supabaseClient.from('complaints').select('*', { count: 'exact', head: true }).eq('user_id', user.id).neq('status', 'Resolved');
             document.getElementById('activeReportsCount').textContent = reportCount || 0;
+
+            // Initialize Notifications
+            updateResidentNotifications(user.id);
         });
+
+        async function updateResidentNotifications(userId) {
+            const badge = document.getElementById('notifBadge');
+            const list = document.getElementById('notifItems');
+            const lastRead = parseInt(localStorage.getItem(`notif_read_${userId}`)) || 0;
+
+            try {
+                const { data: allReqs } = await supabaseClient.from('requests').select('*').eq('user_id', userId);
+                const { data: allComps } = await supabaseClient.from('complaints').select('*').eq('user_id', userId);
+
+                let allNotifs = [];
+
+                (allReqs || []).filter(r => r.status !== 'Pending').forEach(r => {
+                    const updateTime = new Date(r.updated_at || r.created_at).getTime();
+                    let color = 'text-primary';
+                    if (r.status === 'Ready for Pickup' || r.status === 'Completed') color = 'text-success';
+                    if (r.status === 'Rejected') color = 'text-danger';
+
+                    allNotifs.push({
+                        title: `Document Update`,
+                        text: `Your ${r.type} is now <strong>${r.status}</strong>.`,
+                        time: new Date(updateTime),
+                        timestamp: updateTime,
+                        icon: 'fa-file-invoice',
+                        color: color,
+                        isNew: updateTime > lastRead
+                    });
+                });
+
+                (allComps || []).filter(c => c.status !== 'Pending').forEach(c => {
+                    const updateTime = new Date(c.updated_at || c.created_at).getTime();
+                    let color = 'text-warning';
+                    if (c.status === 'Resolved') color = 'text-success';
+
+                    allNotifs.push({
+                        title: `Report Update`,
+                        text: `Your ${c.category} report is <strong>${c.status}</strong>.`,
+                        time: new Date(updateTime),
+                        timestamp: updateTime,
+                        icon: 'fa-circle-exclamation',
+                        color: color,
+                        isNew: updateTime > lastRead
+                    });
+                });
+
+                allNotifs.sort((a, b) => b.timestamp - a.timestamp);
+
+                const unreadCount = allNotifs.filter(n => n.isNew).length;
+                
+                if (unreadCount > 0) {
+                    badge.textContent = unreadCount;
+                    badge.style.display = 'block';
+                } else {
+                    badge.style.display = 'none';
+                }
+
+                if (allNotifs.length > 0) {
+                    list.innerHTML = allNotifs.slice(0, 10).map(n => `
+                        <li class="p-3 border-bottom ${n.isNew ? 'bg-light' : ''}">
+                            <div class="d-flex align-items-start text-start">
+                                <div class="bg-light rounded-circle p-2 me-3" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fa-solid ${n.icon} ${n.color} small"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <p class="mb-0 fw-bold small text-dark">${n.title}</p>
+                                        ${n.isNew ? '<span class="badge bg-primary" style="font-size: 8px; padding: 2px 5px;">NEW</span>' : ''}
+                                    </div>
+                                    <p class="mb-0 text-muted extra-small" style="font-size: 11px;">${n.text}</p>
+                                    <p class="mb-0 text-primary mt-1" style="font-size: 10px;">${n.time.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                                </div>
+                            </div>
+                        </li>
+                    `).join('');
+                } else {
+                    list.innerHTML = '<li class="p-4 text-center text-muted small">No updates yet.</li>';
+                }
+
+                // Mark as Read when dropdown is opened
+                const dropdownBtn = document.getElementById('notifBtn');
+                dropdownBtn.addEventListener('show.bs.dropdown', () => {
+                    if (allNotifs.length > 0) {
+                        localStorage.setItem(`notif_read_${userId}`, allNotifs[0].timestamp);
+                        setTimeout(() => {
+                            badge.style.display = 'none';
+                        }, 500);
+                    }
+                });
+
+            } catch (err) {
+                console.error("Notif Error:", err);
+            }
+        }
     </script>
     <script src="chatbot.js"></script>
 </body>

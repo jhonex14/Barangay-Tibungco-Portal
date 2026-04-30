@@ -12,6 +12,7 @@ console.log("Supabase Client initialized.");
 
 const App = {
     init: async function() {
+        // Initialize Auth listener and check initial state
         this.checkAuthStatus();
     },
 
@@ -33,47 +34,70 @@ const App = {
 
     // UI Updates based on Supabase auth status
     checkAuthStatus: async function() {
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        
         const navRight = document.getElementById('userMenu');
-        if (user && navRight) {
-            // Get user profile for role
-            const { data: profile } = await supabaseClient
-                .from('profiles')
-                .select('role, full_name')
-                .eq('id', user.id)
-                .single();
+        if (!navRight) return;
 
-            const role = profile ? profile.role : 'resident';
-            const name = profile ? profile.full_name : user.email;
+        // 1. Initial Check (Immediate)
+        const { data: { session: initialSession } } = await supabaseClient.auth.getSession();
+        this.updateUserMenu(initialSession ? initialSession.user : null);
 
-            if (role === 'admin') {
-                navRight.innerHTML = `
-                    <div class="dropdown">
-                        <button class="btn btn-warning fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="fa-solid fa-user-shield me-1"></i> Admin Panel
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                            <li><a class="dropdown-item" href="dashboard.html">Dashboard</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="#" onclick="App.logout()">Logout</a></li>
-                        </ul>
-                    </div>
-                `;
-            } else {
-                navRight.innerHTML = `
-                    <div class="dropdown">
-                        <button class="btn btn-light fw-bold dropdown-toggle text-primary" type="button" data-bs-toggle="dropdown">
-                            <i class="fa-solid fa-circle-user me-1"></i> ${name.split(' ')[0]}
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                            <li><a class="dropdown-item" href="resident-dashboard.html">My Profile</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="#" onclick="App.logout()">Logout</a></li>
-                        </ul>
-                    </div>
-                `;
+        // 2. Listen for state changes (Future)
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            this.updateUserMenu(session ? session.user : null);
+        });
+    },
+
+    updateUserMenu: async function(user) {
+        const navRight = document.getElementById('userMenu');
+        if (!navRight) return;
+
+        if (user) {
+            try {
+                const { data: profile } = await supabaseClient
+                    .from('profiles')
+                    .select('role, full_name')
+                    .eq('id', user.id)
+                    .single();
+
+                const role = profile ? profile.role : 'resident';
+                const name = profile ? (profile.full_name || user.email) : user.email;
+
+                if (role === 'admin') {
+                    navRight.innerHTML = `
+                        <div class="dropdown">
+                            <button class="btn btn-warning fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fa-solid fa-user-shield me-1"></i> Admin Panel
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                <li><a class="dropdown-item" href="dashboard.html">Dashboard</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" onclick="App.logout()">Logout</a></li>
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    navRight.innerHTML = `
+                        <div class="dropdown">
+                            <button class="btn btn-light fw-bold dropdown-toggle text-primary" type="button" data-bs-toggle="dropdown">
+                                <i class="fa-solid fa-circle-user me-1"></i> ${name.split(' ')[0]}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                <li><a class="dropdown-item" href="resident-dashboard.html">My Profile</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" onclick="App.logout()">Logout</a></li>
+                            </ul>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error("Profile fetch error:", err);
             }
+        } else {
+            // Keep original Login/Register buttons
+            navRight.innerHTML = `
+                <a href="login.html" class="btn btn-outline-light me-2">Login</a>
+                <a href="register.html" class="btn btn-warning fw-bold text-dark">Register</a>
+            `;
         }
     },
 
