@@ -11,45 +11,70 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-light">
+<body class="login-bg fade-in">
+    <!-- Decorative Mixed Background Elements with Animation -->
+    <div class="bg-overlay"></div>
+    <div class="bg-logo-left floating-slow"><img src="images/logodavao.png" alt="Davao Logo"></div>
+    <div class="bg-eagle-right floating-medium"><img src="images/eagle.png" alt="Philippine Eagle"></div>
 
-    <div class="container d-flex justify-content-center align-items-center min-vh-100 py-5">
+    <div class="container d-flex justify-content-center align-items-center min-vh-100 py-5 position-relative" style="z-index: 2;">
         <div class="col-12 col-md-8 col-lg-5">
-            <div class="card auth-card">
-                <div class="auth-header">
-                    <a href="index.html" class="text-white text-decoration-none d-inline-block mb-3">
-                        <img src="images/logo.png" alt="Brgy. Tibungco Logo" style="width:120px;height:120px;object-fit:contain;border-radius:50%;background:#fff;padding:6px;" class="shadow">
+            <div class="card auth-card shadow-2xl border-0 overflow-hidden" style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.4) !important;">
+                <div class="auth-header py-5" style="background: linear-gradient(135deg, #0d6efd 0%, #003366 100%);">
+                    <a href="index.html" class="text-white text-decoration-none d-inline-block mb-4 hover-zoom">
+                        <img src="images/logo.png" alt="Brgy. Tibungco Logo" style="width:100px;height:100px;object-fit:contain;border-radius:50%;background:#fff;padding:5px; border: 3px solid rgba(255,255,255,0.2);" class="shadow-lg">
                     </a>
-                    <h3 class="fw-bold mb-0">Welcome Back</h3>
-                    <p class="text-white-50 mb-0">Sign in to access barangay services</p>
+                    <h2 class="fw-bold mb-1 text-white" style="letter-spacing: -0.5px;">Brgy. Tibungco</h2>
+                    <p class="text-white-50 mb-0 small text-uppercase fw-semibold tracking-wider">Official Smart Portal Access</p>
                 </div>
                 <div class="card-body p-4 p-md-5">
-                    <div id="loginAlert" class="alert alert-danger d-none" role="alert"></div>
+                    <div id="loginAlert" class="alert alert-danger d-none border-0 shadow-sm" role="alert"></div>
                     
                     <form id="loginForm">
                         <div class="mb-4">
-                            <label class="form-label fw-semibold text-muted small">Email Address</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-envelope text-muted"></i></span>
-                                <input type="email" class="form-control border-start-0 bg-light" id="email" required placeholder="name@example.com">
+                            <label class="form-label fw-bold text-secondary small mb-2">IDENTIFICATION EMAIL</label>
+                            <div class="input-group input-group-lg border rounded-3 overflow-hidden shadow-sm transition-focus">
+                                <span class="input-group-text bg-white border-0"><i class="fa-solid fa-envelope text-primary opacity-75"></i></span>
+                                <input type="email" class="form-control border-0 ps-0" id="email" required placeholder="example@davao.gov.ph" style="font-size: 16px;">
                             </div>
                         </div>
                         <div class="mb-4">
-                            <div class="d-flex justify-content-between">
-                                <label class="form-label fw-semibold text-muted small">Password</label>
-                                <a href="forgot-password.html" class="small text-decoration-none text-primary">Forgot Password?</a>
+                            <div class="d-flex justify-content-between mb-2">
+                                <label class="form-label fw-bold text-secondary small">SECURITY PASSWORD</label>
+                                <a href="forgot-password.html" class="small text-decoration-none text-primary fw-bold">Forgot Password?</a>
                             </div>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-lock text-muted"></i></span>
-                                <input type="password" class="form-control border-start-0 bg-light" id="password" required placeholder="••••••••">
+                            <div class="input-group input-group-lg border rounded-3 overflow-hidden shadow-sm transition-focus">
+                                <span class="input-group-text bg-white border-0"><i class="fa-solid fa-lock text-primary opacity-75"></i></span>
+                                <input type="password" class="form-control border-0 ps-0" id="password" required placeholder="••••••••" style="font-size: 16px;">
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold mb-3">Login</button>
+                        <div class="mb-4 form-check small">
+                            <input type="checkbox" class="form-check-input" id="rememberMe">
+                            <label class="form-check-label text-muted fw-semibold" for="rememberMe">Keep me signed in for 30 days</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 py-3 fw-bold mb-4 shadow-lg border-0" style="background: linear-gradient(to right, #0d6efd, #0044cc);">
+                            SECURE LOGIN
+                        </button>
                         <div class="text-center">
-                            <span class="text-muted small">Don't have an account? <a href="register.html" class="text-primary fw-bold text-decoration-none">Register here</a></span>
+                            <span class="text-muted small fw-semibold">New resident? <a href="register.html" class="text-primary fw-bold text-decoration-none ms-1">Create an account &rarr;</a></span>
                         </div>
                     </form>
                 </div>
+            </div>
+            
+            <div class="d-flex justify-content-center align-items-center mt-5 opacity-75">
+                <div class="text-center px-3 border-end border-white-50">
+                    <i class="fa-solid fa-shield-halved text-white mb-2 fs-4"></i>
+                    <p class="text-white extra-small mb-0 fw-bold">SSL SECURED</p>
+                </div>
+                <div class="text-center px-3">
+                    <img src="images/logodavao.png" alt="Davao Logo" style="height: 35px; filter: brightness(0) invert(1);">
+                    <p class="text-white extra-small mb-0 fw-bold">GOV.PH</p>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4 text-white-50" style="font-size: 11px; letter-spacing: 1px;">
+                &copy; 2026 BARANGAY TIBUNGCO SMART PORTAL • OFFICIAL ACCESS
             </div>
         </div>
     </div>

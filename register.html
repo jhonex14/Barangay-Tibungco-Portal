@@ -11,85 +11,108 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-light">
+<body class="login-bg fade-in">
+    <!-- Decorative Mixed Background Elements with Animation -->
+    <div class="bg-overlay"></div>
+    <div class="bg-logo-left floating-slow"><img src="images/logodavao.png" alt="Davao Logo"></div>
+    <div class="bg-eagle-right floating-medium"><img src="images/eagle.png" alt="Philippine Eagle"></div>
 
-    <div class="container d-flex justify-content-center align-items-center min-vh-100 py-5">
-        <div class="col-12 col-md-8 col-lg-6">
-            <div class="card auth-card">
-                <div class="auth-header bg-primary">
-                    <a href="index.html" class="text-white text-decoration-none d-inline-block mb-3">
-                        <img src="images/logo.png" alt="Brgy. Tibungco Logo" style="width:80px;height:80px;object-fit:contain;border-radius:50%;background:#fff;padding:4px;" class="shadow">
+    <div class="container d-flex justify-content-center align-items-center min-vh-100 py-4 position-relative" style="z-index: 2;">
+        <div class="col-12 col-md-8 col-lg-5">
+            <div class="card auth-card shadow-2xl border-0 overflow-hidden" style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.4) !important;">
+                <div class="auth-header py-4" style="background: linear-gradient(135deg, #0d6efd 0%, #003366 100%);">
+                    <a href="index.html" class="text-white text-decoration-none d-inline-block mb-2 hover-zoom">
+                        <img src="images/logo.png" alt="Brgy. Tibungco Logo" style="width:70px;height:70px;object-fit:contain;border-radius:50%;background:#fff;padding:4px; border: 2px solid rgba(255,255,255,0.2);" class="shadow-lg">
                     </a>
-                    <h3 class="fw-bold mb-0">Create an Account</h3>
-                    <p class="text-white-50 mb-0">Register to access online barangay services</p>
+                    <h4 class="fw-bold mb-0 text-white">Create Citizen Account</h4>
+                    <p class="text-white-50 mb-0 extra-small text-uppercase fw-semibold tracking-wider">Barangay Tibungco Smart Services</p>
                 </div>
-                <div class="card-body p-4 p-md-5">
-                    <div id="registerAlert" class="alert d-none" role="alert"></div>
+                <div class="card-body p-4">
+                    <div id="registerAlert" class="alert d-none border-0 shadow-sm py-2 small" role="alert"></div>
                     
                     <form id="registerForm">
                         <div class="row g-3">
                             <div class="col-12">
-                                <label class="form-label fw-semibold text-muted small">Full Name</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-user text-muted"></i></span>
-                                    <input type="text" class="form-control border-start-0 bg-light" id="regName" required placeholder="Juan Dela Cruz">
+                                <label class="form-label fw-bold text-secondary extra-small mb-1">FULL NAME</label>
+                                <div class="input-group border rounded-2 overflow-hidden shadow-sm transition-focus">
+                                    <span class="input-group-text bg-white border-0 py-1"><i class="fa-solid fa-user text-primary opacity-75 small"></i></span>
+                                    <input type="text" class="form-control border-0 ps-0 py-1" id="regName" required placeholder="Juan Dela Cruz" style="font-size: 14px;">
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold text-muted small">Purok / Zone</label>
-                                <select class="form-select bg-light" id="regPurok" required>
-                                    <option value="" selected disabled>Select...</option>
-                                    <option value="Purok 1">Purok 1</option>
-                                    <option value="Purok 2">Purok 2</option>
-                                    <option value="Purok 3">Purok 3</option>
-                                    <option value="Purok 4">Purok 4</option>
-                                    <option value="Purok 5">Purok 5</option>
-                                    <option value="Purok 6">Purok 6</option>
-                                    <option value="Purok 7">Purok 7</option>
-                                    <option value="Purok 8">Purok 8</option>
-                                    <option value="Purok 9">Purok 9</option>
-                                    <option value="Purok 10">Purok 10</option>
-                                    <option value="Purok 11">Purok 11</option>
-                                    <option value="Purok 12">Purok 12</option>
-                                    <option value="Purok 13">Purok 13</option>
-                                    <option value="Purok 14">Purok 14</option>
-                                    <option value="Purok 15">Purok 15</option>
-                                    <option value="Purok 16">Purok 16</option>
-                                    <option value="Purok 17">Purok 17</option>
-                                </select>
+                                <label class="form-label fw-bold text-secondary extra-small mb-1">PUROK / ZONE</label>
+                                <div class="input-group border rounded-2 overflow-hidden shadow-sm transition-focus">
+                                    <span class="input-group-text bg-white border-0 py-1"><i class="fa-solid fa-map-location-dot text-primary opacity-75 small"></i></span>
+                                    <select class="form-select border-0 ps-0 py-1" id="regPurok" required style="font-size: 14px;">
+                                        <option value="" selected disabled>Select...</option>
+                                        <option value="Purok 1">Purok 1</option>
+                                        <option value="Purok 2">Purok 2</option>
+                                        <option value="Purok 3">Purok 3</option>
+                                        <option value="Purok 4">Purok 4</option>
+                                        <option value="Purok 5">Purok 5</option>
+                                        <option value="Purok 6">Purok 6</option>
+                                        <option value="Purok 7">Purok 7</option>
+                                        <option value="Purok 8">Purok 8</option>
+                                        <option value="Purok 9">Purok 9</option>
+                                        <option value="Purok 10">Purok 10</option>
+                                        <option value="Purok 11">Purok 11</option>
+                                        <option value="Purok 12">Purok 12</option>
+                                        <option value="Purok 13">Purok 13</option>
+                                        <option value="Purok 14">Purok 14</option>
+                                        <option value="Purok 15">Purok 15</option>
+                                        <option value="Purok 16">Purok 16</option>
+                                        <option value="Purok 17">Purok 17</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold text-muted small">Phone Number</label>
-                                <input type="tel" class="form-control bg-light" id="regPhone" required placeholder="09XX-XXX-XXXX">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label fw-semibold text-muted small">Email Address</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-envelope text-muted"></i></span>
-                                    <input type="email" class="form-control border-start-0 bg-light" id="regEmail" required placeholder="name@example.com">
+                                <label class="form-label fw-bold text-secondary extra-small mb-1">PHONE NUMBER</label>
+                                <div class="input-group border rounded-2 overflow-hidden shadow-sm transition-focus">
+                                    <span class="input-group-text bg-white border-0 py-1"><i class="fa-solid fa-phone text-primary opacity-75 small"></i></span>
+                                    <input type="tel" class="form-control border-0 ps-0 py-1" id="regPhone" required placeholder="09XX-XXX-XXXX" style="font-size: 14px;">
                                 </div>
                             </div>
                             <div class="col-12">
-                                <label class="form-label fw-semibold text-muted small">Password</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-lock text-muted"></i></span>
-                                    <input type="password" class="form-control border-start-0 bg-light" id="regPassword" required placeholder="Create a strong password">
+                                <label class="form-label fw-bold text-secondary extra-small mb-1">EMAIL ADDRESS</label>
+                                <div class="input-group border rounded-2 overflow-hidden shadow-sm transition-focus">
+                                    <span class="input-group-text bg-white border-0 py-1"><i class="fa-solid fa-envelope text-primary opacity-75 small"></i></span>
+                                    <input type="email" class="form-control border-0 ps-0 py-1" id="regEmail" required placeholder="name@example.com" style="font-size: 14px;">
                                 </div>
                             </div>
-                            <div class="col-12 mt-4">
-                                <div class="form-check mb-3">
+                            <div class="col-12">
+                                <label class="form-label fw-bold text-secondary extra-small mb-1">SECURITY PASSWORD</label>
+                                <div class="input-group border rounded-2 overflow-hidden shadow-sm transition-focus">
+                                    <span class="input-group-text bg-white border-0 py-1"><i class="fa-solid fa-lock text-primary opacity-75 small"></i></span>
+                                    <input type="password" class="form-control border-0 ps-0 py-1" id="regPassword" required placeholder="Create a strong password" style="font-size: 14px;">
+                                </div>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <div class="form-check mb-3 extra-small">
                                     <input class="form-check-input" type="checkbox" id="termsCheck" required>
-                                    <label class="form-check-label small text-muted" for="termsCheck">
-                                        I agree to the <a href="#" class="text-primary">Terms of Service</a> and <a href="#" class="text-primary">Privacy Policy</a>.
+                                    <label class="form-check-label text-muted fw-semibold" for="termsCheck">
+                                        I certify residency in Brgy. Tibungco and agree to <a href="#" class="text-primary fw-bold">Terms</a>.
                                     </label>
                                 </div>
-                                <button type="submit" class="btn btn-warning w-100 py-2 fw-bold mb-3 text-dark">Register Account</button>
+                                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold mb-3 shadow-lg border-0" style="background: linear-gradient(to right, #0d6efd, #0044cc); font-size: 14px;">
+                                    REGISTER ACCOUNT
+                                </button>
                                 <div class="text-center">
-                                    <span class="text-muted small">Already have an account? <a href="login.html" class="text-primary fw-bold text-decoration-none">Login here</a></span>
+                                    <span class="text-muted extra-small fw-semibold">Already a member? <a href="login.html" class="text-primary fw-bold text-decoration-none ms-1">Sign in here &rarr;</a></span>
                                 </div>
                             </div>
                         </div>
                     </form>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-center align-items-center mt-5 opacity-75">
+                <div class="text-center px-3 border-end border-white-50">
+                    <i class="fa-solid fa-fingerprint text-white mb-2 fs-4"></i>
+                    <p class="text-white extra-small mb-0 fw-bold">SECURE IDENTITY</p>
+                </div>
+                <div class="text-center px-3">
+                    <img src="images/logodavao.png" alt="Davao Logo" style="height: 35px; filter: brightness(0) invert(1);">
+                    <p class="text-white extra-small mb-0 fw-bold">GOV.PH</p>
                 </div>
             </div>
         </div>
