@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Barangay Tibungco Smart Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <div class="container d-flex justify-content-center align-items-center min-vh-100 py-5">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card auth-card">
+                <div class="auth-header bg-primary">
+                    <a href="index.html" class="text-white text-decoration-none d-inline-block mb-3">
+                        <img src="images/logo.png" alt="Brgy. Tibungco Logo" style="width:80px;height:80px;object-fit:contain;border-radius:50%;background:#fff;padding:4px;" class="shadow">
+                    </a>
+                    <h3 class="fw-bold mb-0">Create an Account</h3>
+                    <p class="text-white-50 mb-0">Register to access online barangay services</p>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <div id="registerAlert" class="alert d-none" role="alert"></div>
+                    
+                    <form id="registerForm">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold text-muted small">Full Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-user text-muted"></i></span>
+                                    <input type="text" class="form-control border-start-0 bg-light" id="regName" required placeholder="Juan Dela Cruz">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-muted small">Purok / Zone</label>
+                                <select class="form-select bg-light" id="regPurok" required>
+                                    <option value="" selected disabled>Select...</option>
+                                    <option value="Purok 1">Purok 1</option>
+                                    <option value="Purok 2">Purok 2</option>
+                                    <option value="Purok 3">Purok 3</option>
+                                    <option value="Purok 4">Purok 4</option>
+                                    <option value="Purok 5">Purok 5</option>
+                                    <option value="Purok 6">Purok 6</option>
+                                    <option value="Purok 7">Purok 7</option>
+                                    <option value="Purok 8">Purok 8</option>
+                                    <option value="Purok 9">Purok 9</option>
+                                    <option value="Purok 10">Purok 10</option>
+                                    <option value="Purok 11">Purok 11</option>
+                                    <option value="Purok 12">Purok 12</option>
+                                    <option value="Purok 13">Purok 13</option>
+                                    <option value="Purok 14">Purok 14</option>
+                                    <option value="Purok 15">Purok 15</option>
+                                    <option value="Purok 16">Purok 16</option>
+                                    <option value="Purok 17">Purok 17</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-muted small">Phone Number</label>
+                                <input type="tel" class="form-control bg-light" id="regPhone" required placeholder="09XX-XXX-XXXX">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold text-muted small">Email Address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-envelope text-muted"></i></span>
+                                    <input type="email" class="form-control border-start-0 bg-light" id="regEmail" required placeholder="name@example.com">
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold text-muted small">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-lock text-muted"></i></span>
+                                    <input type="password" class="form-control border-start-0 bg-light" id="regPassword" required placeholder="Create a strong password">
+                                </div>
+                            </div>
+                            <div class="col-12 mt-4">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                                    <label class="form-check-label small text-muted" for="termsCheck">
+                                        I agree to the <a href="#" class="text-primary">Terms of Service</a> and <a href="#" class="text-primary">Privacy Policy</a>.
+                                    </label>
+                                </div>
+                                <button type="submit" class="btn btn-warning w-100 py-2 fw-bold mb-3 text-dark">Register Account</button>
+                                <div class="text-center">
+                                    <span class="text-muted small">Already have an account? <a href="login.html" class="text-primary fw-bold text-decoration-none">Login here</a></span>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            console.log("Registration form submitted...");
+            
+            const btn = e.target.querySelector('button');
+            const originalBtnText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating Account...';
+            btn.disabled = true;
+
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const purok = document.getElementById('regPurok').value;
+            const phone = document.getElementById('regPhone').value;
+            const alertBox = document.getElementById('registerAlert');
+
+            try {
+                // 1. Sign up user via Supabase Auth
+                console.log("Attempting sign up for:", email);
+                
+                if (!window.supabase || !supabaseClient) {
+                    throw new Error("Supabase client is not ready. Please refresh the page.");
+                }
+
+                const { data, error: authError } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password
+                });
+
+                if (authError) {
+                    console.error("Auth Error:", authError);
+                    throw authError;
+                }
+
+                console.log("Auth success! User data:", data);
+
+                // 2. Create Profile Record
+                if (data.user) {
+                    console.log("Creating profile for user ID:", data.user.id);
+                    const { error: profileError } = await supabaseClient
+                        .from('profiles')
+                        .insert([
+                            { id: data.user.id, full_name: name, role: 'resident', purok: purok, phone: phone }
+                        ]);
+
+                    if (profileError) {
+                        console.warn("Profile insertion failed:", profileError);
+                    }
+                }
+                
+                // Show Success and Redirect
+                alertBox.className = 'alert alert-success';
+                alertBox.textContent = 'Registration successful! Redirecting to login...';
+                alertBox.classList.remove('d-none');
+                
+                btn.innerHTML = 'Success!';
+                btn.classList.replace('btn-warning', 'btn-success');
+
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+
+            } catch (err) {
+                console.error("Caught Error during registration:", err);
+                
+                // Handle Rate Limit Error specially
+                if (err.message.includes("rate limit")) {
+                    alertBox.className = 'alert alert-warning';
+                    alertBox.innerHTML = `<strong>Limit Reached:</strong> You tried too many times. Please wait 1 minute or try a different email.`;
+                } else {
+                    alertBox.className = 'alert alert-danger';
+                    alertBox.textContent = err.message || 'An unexpected error occurred.';
+                }
+                
+                alertBox.classList.remove('d-none');
+                btn.innerHTML = originalBtnText;
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

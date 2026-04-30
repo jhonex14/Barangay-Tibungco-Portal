@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Services - Barangay Tibungco</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- INSTANT SECURITY CHECK -->
+    <script>
+        // If there is no Supabase token in local storage, kick out instantly before page loads.
+        if (!localStorage.getItem('sb-awotfselbqtovxwxoxeu-auth-token')) {
+            window.location.href = 'login.html';
+        }
+    </script>
+</head>
+<body class="bg-light">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">
+                <img src="images/logo.png" alt="Logo" style="width:40px;height:40px;object-fit:contain;border-radius:50%;background:#fff;padding:2px;" class="me-2 shadow-sm">Brgy. Tibungco
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto fw-medium">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="services.html">E-Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="complaints.html">Report Issue</a></li>
+                </ul>
+                <div class="ms-lg-3 mt-3 mt-lg-0" id="userMenu">
+                    <!-- Populated by app.js -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-top: 100px; margin-bottom: 50px;">
+        <div class="text-center mb-5">
+            <span class="badge bg-primary text-white mb-2 px-3 py-2 rounded-pill">E-Services</span>
+            <h2 class="fw-bold">Request Documents Online</h2>
+            <p class="text-muted">Skip the line! Request your barangay certificates here and pick them up when ready.</p>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4 p-md-5">
+                        <div id="requestAlert" class="alert d-none" role="alert"></div>
+                        
+                        <form id="requestForm">
+                            <div class="row g-4">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">First Name</label>
+                                    <input type="text" class="form-control bg-light border-0" id="reqFirstName" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Middle Name</label>
+                                    <input type="text" class="form-control bg-light border-0" id="reqMiddleName">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Surname</label>
+                                    <input type="text" class="form-control bg-light border-0" id="reqSurname" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Birthday</label>
+                                    <input type="date" class="form-control bg-light border-0" id="reqBirthday" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Age</label>
+                                    <input type="number" class="form-control bg-light border-0" id="reqAge" required min="1">
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label fw-semibold">Address</label>
+                                    <input type="text" class="form-control bg-light border-0" id="reqAddress" required placeholder="Complete Address">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Purok Certificate Reference #</label>
+                                    <input type="text" class="form-control bg-light border-0" id="purokCertRef" required placeholder="Enter Ref #">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Upload Purok Certificate</label>
+                                    <input type="file" class="form-control bg-light border-0" id="purokCertFile" accept="image/*,.pdf" required>
+                                    <div class="form-text small">Accepted formats: Image (JPG, PNG) or PDF.</div>
+                                </div>
+                                <div class="col-md-12">
+                                    <hr class="text-muted">
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label fw-semibold">Select Document Type</label>
+                                    <select class="form-select bg-light border-0" id="docType" required>
+                                        <option value="" selected disabled>Choose a document...</option>
+                                        <option value="Barangay Clearance">Barangay Clearance</option>
+                                        <option value="Certificate of Indigency">Certificate of Indigency</option>
+                                        <option value="Certificate of Residency">Certificate of Residency</option>
+                                        <option value="Business Permit">Business Permit</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Purpose of Request</label>
+                                    <select class="form-select bg-light border-0" id="purpose" required>
+                                        <option value="" selected disabled>Select purpose...</option>
+                                        <option value="Employment">Employment</option>
+                                        <option value="Bank Requirements">Bank Requirements</option>
+                                        <option value="School Requirements">School Requirements</option>
+                                        <option value="Financial Assistance">Financial/Medical Assistance</option>
+                                        <option value="Others">Others</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Preferred Pickup Date</label>
+                                    <input type="date" class="form-control bg-light border-0" id="pickupDate" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Payment Method</label>
+                                    <select class="form-select bg-light border-0" id="paymentMethod" required onchange="handlePaymentChange()">
+                                        <option value="" selected disabled>Select payment...</option>
+                                        <option value="Cash">Cash on Pickup</option>
+                                        <option value="GCash">GCash</option>
+                                        <option value="PayMaya">PayMaya</option>
+                                    </select>
+                                </div>
+
+                                <!-- Payment Details (Hidden by default) -->
+                                <div id="eWalletDetails" class="col-12 d-none">
+                                    <div class="alert alert-info border-0 shadow-sm rounded-4 p-4 text-center">
+                                        <h6 class="fw-bold mb-3">Scan to Pay (₱50.00)</h6>
+                                        <div class="bg-white p-3 d-inline-block rounded-3 mb-3 shadow-sm">
+                                            <img id="qrCodeImg" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=BarangayTibungcoPayment" alt="QR Code" style="width: 150px;">
+                                        </div>
+                                        <p class="small mb-0 text-muted">Please save a screenshot of your transaction.<br>Account Name: <strong>Brgy. Tibungco Official</strong></p>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="certify" required>
+                                        <label class="form-check-label text-muted small" for="certify">
+                                            I certify that I am a registered resident of Barangay Tibungco and the information provided is true and correct.
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-12 mt-4 text-center">
+                                    <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill shadow-sm fw-bold">Pay & Submit Request (₱50.00)</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Secondary server check just to be sure
+        App.requireAuth();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set min date to tomorrow for pickup
+            const dateInput = document.getElementById('pickupDate');
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            dateInput.min = tomorrow.toISOString().split('T')[0];
+
+            window.handlePaymentChange = function() {
+                const method = document.getElementById('paymentMethod').value;
+                const eWalletDiv = document.getElementById('eWalletDetails');
+                if (method === 'GCash' || method === 'PayMaya') {
+                    eWalletDiv.classList.remove('d-none');
+                } else {
+                    eWalletDiv.classList.add('d-none');
+                }
+            };
+
+            document.getElementById('requestForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const btn = e.target.querySelector('button');
+                const originalBtnText = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
+                btn.disabled = true;
+
+                const alertBox = document.getElementById('requestAlert');
+
+                // Get current user from Supabase
+                const { data: { user } } = await supabaseClient.auth.getUser();
+
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                // Get profile for name/role
+                const { data: profile } = await supabaseClient
+                    .from('profiles')
+                    .select('full_name, role')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profile && profile.role === 'admin') {
+                    alertBox.className = 'alert alert-warning';
+                    alertBox.textContent = 'Admins cannot request documents. Please log in as a resident.';
+                    alertBox.classList.remove('d-none');
+                    btn.innerHTML = originalBtnText;
+                    btn.disabled = false;
+                    return;
+                }
+
+                const docType = document.getElementById('docType').value;
+                const purpose = document.getElementById('purpose').value;
+                const pickupDate = document.getElementById('pickupDate').value;
+                const paymentMethod = document.getElementById('paymentMethod').value;
+                
+                // New Fields
+                const firstName = document.getElementById('reqFirstName').value;
+                const middleName = document.getElementById('reqMiddleName').value;
+                const surname = document.getElementById('reqSurname').value;
+                const birthday = document.getElementById('reqBirthday').value;
+                const age = document.getElementById('reqAge').value;
+                const address = document.getElementById('reqAddress').value;
+                const purokCertRef = document.getElementById('purokCertRef').value;
+                const certFile = document.getElementById('purokCertFile').files[0];
+
+                let certUrl = null;
+                if (certFile) {
+                    const fileExt = certFile.name.split('.').pop();
+                    const fileName = `${Date.now()}.${fileExt}`;
+                    const filePath = `${user.id}/${fileName}`;
+
+                    const { error: uploadError } = await supabaseClient.storage
+                        .from('purok-certificates')
+                        .upload(filePath, certFile);
+
+                    if (uploadError) {
+                        alertBox.className = 'alert alert-danger';
+                        alertBox.textContent = 'Upload Error: ' + uploadError.message;
+                        alertBox.classList.remove('d-none');
+                        btn.innerHTML = originalBtnText;
+                        btn.disabled = false;
+                        return;
+                    }
+
+                    const { data: urlData } = supabaseClient.storage
+                        .from('purok-certificates')
+                        .getPublicUrl(filePath);
+                    certUrl = urlData.publicUrl;
+                }
+
+                const trackingId = App.generateTrackingId('DOC');
+                
+                const { error } = await supabaseClient
+                    .from('requests')
+                    .insert([
+                        {
+                            tracking_id: trackingId,
+                            user_id: user.id,
+                            user_name: profile ? profile.full_name : user.email,
+                            type: docType,
+                            purpose: purpose,
+                            pickup_date: pickupDate,
+                            payment_method: paymentMethod,
+                            payment_status: (paymentMethod === 'Cash') ? 'Unpaid' : 'Paid',
+                            status: 'Pending',
+                            // New columns
+                            first_name: firstName,
+                            middle_name: middleName,
+                            surname: surname,
+                            birthday: birthday,
+                            age: parseInt(age),
+                            address: address,
+                            purok_cert_ref: purokCertRef,
+                            purok_cert_url: certUrl
+                        }
+                    ]);
+
+                if (error) {
+                    alertBox.className = 'alert alert-danger';
+                    alertBox.textContent = 'Error: ' + error.message;
+                    alertBox.classList.remove('d-none');
+                    btn.innerHTML = originalBtnText;
+                    btn.disabled = false;
+                    return;
+                }
+
+                alertBox.className = 'alert alert-success';
+                alertBox.innerHTML = `<strong>Success!</strong> Your request has been submitted. Tracking ID: <strong>${trackingId}</strong>`;
+                alertBox.classList.remove('d-none');
+                
+                this.reset();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                setTimeout(() => {
+                    window.location.href = 'resident-dashboard.html';
+                }, 3000);
+            });
+        });
+    </script>
+    <script src="chatbot.js"></script>
+</body>
+</html>

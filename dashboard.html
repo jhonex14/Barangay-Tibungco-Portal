@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Brgy. Tibungco</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-light watermark-bg">
+
+    <!-- Sidebar and Main Content Wrapper -->
+    <div class="d-flex min-vh-100">
+        
+        <!-- Sidebar -->
+        <aside class="bg-primary text-white flex-shrink-0 p-4 shadow-sm" style="width: 280px; position: fixed; height: 100vh; overflow-y: auto;">
+            <div class="d-flex align-items-center mb-4">
+                <img src="images/logo.png" alt="Logo" style="width:48px;height:48px;object-fit:contain;border-radius:50%;background:#fff;padding:2px;" class="me-3 shadow-sm">
+                <h5 class="fw-bold mb-0">Admin Panel</h5>
+            </div>
+            <hr class="border-secondary opacity-50 mb-4">
+            <ul class="nav nav-pills flex-column mb-auto gap-2" id="sidebarNav">
+                <li class="nav-item">
+                    <a href="#" onclick="showSection('overview')" class="nav-link sidebar-link active-link fw-bold bg-white text-primary rounded-3" data-section="overview">
+                        <i class="fa-solid fa-chart-pie me-2"></i> Overview
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('residents')" class="nav-link sidebar-link text-white text-opacity-75" data-section="residents">
+                        <i class="fa-solid fa-users me-2"></i> Residents
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('requests')" class="nav-link sidebar-link text-white text-opacity-75" data-section="requests">
+                        <i class="fa-solid fa-file-signature me-2"></i> Document Requests
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('complaints')" class="nav-link sidebar-link text-white text-opacity-75" data-section="complaints">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i> Complaints
+                        <span class="badge bg-danger ms-2" id="complaintsBadge">0</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('announcements')" class="nav-link sidebar-link text-white text-opacity-75" data-section="announcements">
+                        <i class="fa-solid fa-bullhorn me-2"></i> Announcements
+                    </a>
+                </li>
+            </ul>
+            <hr class="border-secondary opacity-50 mt-auto mb-4">
+            <div class="dropdown">
+                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                    <img src="https://ui-avatars.com/api/?name=Admin+User&background=ffc107&color=fff" alt="admin" width="32" height="32" class="rounded-circle me-2">
+                    <strong id="adminName">Admin</strong>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark text-small shadow border-0">
+                    <li><a class="dropdown-item" href="#">Settings</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="#" onclick="App.logout()">Sign out</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-grow-1" style="margin-left: 280px;">
+            <!-- Top Header -->
+            <header class="bg-white p-3 shadow-sm d-flex justify-content-between align-items-center sticky-top">
+                <h4 class="fw-bold mb-0" id="pageTitle">Analytics Overview</h4>
+                <div class="d-flex align-items-center gap-3">
+                    <a href="index.html" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-globe me-1"></i> View Site</a>
+                    <!-- Notification Bell Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-light position-relative text-muted" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-regular fa-bell fs-5"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notifBadge">0</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 p-2" style="min-width:320px;" id="notifDropdown">
+                            <li class="px-2 pb-2 border-bottom mb-2"><h6 class="fw-bold mb-0">🔔 Notifications</h6></li>
+                            <div id="notifList"><li class="px-2 py-1 text-muted small">No new notifications.</li></div>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Overview Section -->
+            <div id="overviewSection" class="p-4 p-md-5">
+                
+                <!-- Stat Cards -->
+                <div class="row g-4 mb-5">
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+                            <div class="card-body p-4 text-center text-md-start">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="text-muted fw-semibold mb-0">Total Residents</h6>
+                                    <div class="bg-primary-soft text-primary rounded-circle p-2"><i class="fa-solid fa-users"></i></div>
+                                </div>
+                                <h2 class="fw-bold mb-1" id="statResidents">0</h2>
+                                <small class="text-success fw-bold"><i class="fa-solid fa-arrow-trend-up me-1"></i>+5 this week</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+                            <div class="card-body p-4 text-center text-md-start">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="text-muted fw-semibold mb-0">Pending Requests</h6>
+                                    <div class="bg-warning-soft text-warning rounded-circle p-2"><i class="fa-solid fa-file-invoice"></i></div>
+                                </div>
+                                <h2 class="fw-bold mb-1" id="statRequests">0</h2>
+                                <small class="text-danger fw-bold">Needs action</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+                            <div class="card-body p-4 text-center text-md-start">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="text-muted fw-semibold mb-0">Active Complaints</h6>
+                                    <div class="bg-danger-soft text-danger rounded-circle p-2"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                                </div>
+                                <h2 class="fw-bold mb-1" id="statComplaints">0</h2>
+                                <small class="text-muted">In progress</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm rounded-4 bg-primary text-white h-100 position-relative overflow-hidden">
+                            <div class="card-body p-4 position-relative z-1">
+                                <div class="text-center">
+                                    <i class="fa-solid fa-bullhorn fs-2 mb-2 text-warning"></i>
+                                    <h5 class="fw-bold mb-2">Post Announcement</h5>
+                                    <button class="btn btn-light btn-sm rounded-pill px-3 fw-bold text-primary" onclick="showSection('announcements'); openAnnouncementModal()">Create New</button>
+                                </div>
+                            </div>
+                            <div class="position-absolute bottom-0 end-0 opacity-10" style="transform: translate(20%, 20%); font-size: 5rem;">
+                                <i class="fa-solid fa-bullhorn"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="row g-4 mb-5">
+                    <div class="col-md-8">
+                        <div class="card border-0 shadow-sm rounded-4 h-100">
+                            <div class="card-header bg-white border-bottom-0 pt-4 px-4">
+                                <h5 class="fw-bold mb-0">Document Requests (Monthly)</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <canvas id="requestsChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm rounded-4 h-100">
+                            <div class="card-header bg-white border-bottom-0 pt-4 px-4">
+                                <h5 class="fw-bold mb-0">Complaints by Category</h5>
+                            </div>
+                            <div class="card-body p-4 d-flex align-items-center">
+                                <canvas id="complaintsChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Table -->
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-white border-bottom-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0">Recent Document Requests</h5>
+                        <button class="btn btn-outline-primary btn-sm" onclick="showSection('requests')">View All</button>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="text-muted small text-uppercase">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Resident Name</th>
+                                        <th>Document Type</th>
+                                        <th>Payment</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminRequestsTable">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Complaints Section -->
+            <div id="complaintsSection" class="p-4 p-md-5" style="display: none;">
+                <!-- ... existing content ... -->
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-white border-bottom-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0">Resident Complaints & Reports</h5>
+                        <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm" id="complaintFilter" style="width: 150px;" onchange="loadComplaints()">
+                                <option value="All">All Status</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Investigating">Investigating</option>
+                                <option value="Resolved">Resolved</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="text-muted small text-uppercase">
+                                    <tr>
+                                        <th>Tracking ID</th>
+                                        <th>Resident</th>
+                                        <th>Category</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="complaintsTableBody">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requests Section -->
+            <div id="requestsSection" class="p-4 p-md-5" style="display: none;">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-white border-bottom-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0">All Document Requests</h5>
+                        <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm" id="requestFilter" style="width: 150px;" onchange="loadRequests()">
+                                <option value="All">All Status</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Processing">Processing</option>
+                                <option value="Ready for Pickup">Ready for Pickup</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="text-muted small text-uppercase">
+                                    <tr>
+                                        <th>Tracking ID</th>
+                                        <th>Resident</th>
+                                        <th>Document Type</th>
+                                        <th>Method</th>
+                                        <th>Payment Status</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="allRequestsTableBody">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Announcements Section -->
+            <div id="announcementsSection" class="p-4 p-md-5" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0">Manage Announcements</h5>
+                    <button class="btn btn-primary rounded-pill px-4 fw-bold" onclick="openAnnouncementModal()">
+                        <i class="fa-solid fa-plus me-2"></i>New Announcement
+                    </button>
+                </div>
+                
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="text-muted small text-uppercase">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Title</th>
+                                        <th>Category</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="announcementsTableBody">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Request Modal -->
+    <div class="modal fade" id="editRequestModal" tabindex="-1" aria-labelledby="editRequestModalLabel" aria-hidden="true">
+        <!-- ... (Keep existing content, just ensuring it's here) ... -->
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header bg-primary text-white border-0 py-3 px-4">
+                    <h5 class="modal-title fw-bold" id="editRequestModalLabel">
+                        <i class="fa-solid fa-pen-to-square me-2"></i>Update Document Request
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="bg-light rounded-3 p-3 mb-4">
+                        <div class="row g-2 small text-muted">
+                            <div class="col-6"><span class="fw-semibold text-dark">Tracking ID:</span><br><span id="modalTrackingId" class="font-monospace text-primary fw-bold"></span></div>
+                            <div class="col-6"><span class="fw-semibold text-dark">Resident:</span><br><span id="modalResident"></span></div>
+                            <div class="col-6"><span class="fw-semibold text-dark">Document:</span><br><span id="modalDocType"></span></div>
+                            <div class="col-6"><span class="fw-semibold text-dark">Payment Method:</span><br><span id="modalPaymentMethod" class="badge bg-light text-dark border"></span></div>
+                            <div class="col-6"><span class="fw-semibold text-dark">Fee:</span><br><span id="modalFee" class="fw-bold text-success">₱0.00</span></div>
+                            <div class="col-6" id="modalCertContainer"><span class="fw-semibold text-dark">Certificate:</span><br><a id="modalCertLink" href="#" target="_blank" class="small text-primary"><i class="fa-solid fa-file-image me-1"></i>View Uploaded Cert</a></div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="modalRequestId">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Payment Status</label>
+                            <select class="form-select" id="modalPaymentStatus">
+                                <option value="Unpaid">🔴 Unpaid</option>
+                                <option value="Paid">🟢 Paid</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Request Status</label>
+                            <select class="form-select" id="modalStatus">
+                                <option value="Pending">⏳ Pending</option>
+                                <option value="Processing">🔄 Processing</option>
+                                <option value="Ready for Pickup">✅ Ready for Pickup</option>
+                                <option value="Completed">🏁 Completed</option>
+                                <option value="Rejected">❌ Rejected</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Admin Remarks <span class="text-muted fw-normal">(Optional)</span></label>
+                        <textarea class="form-control" id="modalRemarks" rows="3" placeholder="Add a note for this request..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" onclick="saveRequestEdit()">
+                        <i class="fa-solid fa-floppy-disk me-2"></i>Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Complaint Modal -->
+    <div class="modal fade" id="complaintModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header bg-danger text-white border-0 py-3 px-4">
+                    <h5 class="modal-title fw-bold">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i>Complaint Details
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-7">
+                            <div class="bg-light rounded-3 p-4 mb-4 h-100">
+                                <h6 class="fw-bold border-bottom pb-2 mb-3">Issue Description</h6>
+                                <p id="compModalDescription" class="mb-3 text-muted"></p>
+                                
+                                <div id="compModalImageContainer" class="mt-4 d-none">
+                                    <h6 class="fw-bold small mb-2">Photo Evidence</h6>
+                                    <a id="compModalImageLink" href="#" target="_blank">
+                                        <img id="compModalImage" src="" alt="Incident Photo" class="img-fluid rounded-3 shadow-sm border" style="max-height: 250px; width: 100%; object-fit: cover;">
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="bg-white border rounded-3 p-3 small">
+                                <div class="mb-2"><span class="fw-semibold">Resident:</span> <span id="compModalResident" class="float-end"></span></div>
+                                <div class="mb-2"><span class="fw-semibold">Category:</span> <span id="compModalCategory" class="float-end"></span></div>
+                                <div class="mb-2 d-flex justify-content-between align-items-start">
+                                    <span class="fw-semibold">Location:</span> 
+                                    <div class="text-end">
+                                        <div id="compModalLocation"></div>
+                                        <a id="compModalMapLink" href="#" target="_blank" class="btn btn-link btn-sm p-0 text-decoration-none mt-1">
+                                            <i class="fa-solid fa-map-location-dot me-1"></i>View on Maps
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="mb-2"><span class="fw-semibold">Date:</span> <span id="compModalDate" class="float-end"></span></div>
+                                <div class="mb-0"><span class="fw-semibold">Tracking ID:</span> <span id="compModalTracking" class="float-end font-monospace"></span></div>
+                            </div>
+                            <div class="mt-4">
+                                <label class="form-label fw-bold small">Update Resolution Status</label>
+                                <input type="hidden" id="compModalId">
+                                <select class="form-select form-select-sm" id="compModalStatus">
+                                    <option value="Pending">Pending</option>
+                                    <option value="Investigating">Investigating</option>
+                                    <option value="Resolved">Resolved</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold" onclick="saveComplaintUpdate()">
+                        Update Status
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Announcement Modal -->
+    <div class="modal fade" id="announcementModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header bg-primary text-white border-0 py-3 px-4">
+                    <h5 class="modal-title fw-bold">
+                        <i class="fa-solid fa-bullhorn me-2"></i>Post New Announcement
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="announcementForm">
+                        <input type="hidden" id="annId">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Title</label>
+                            <input type="text" class="form-control" id="annTitle" required placeholder="e.g. Community Assembly">
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Category</label>
+                                <select class="form-select" id="annCategory" required>
+                                    <option value="General News">General News</option>
+                                    <option value="Utility Advisory">Utility Advisory</option>
+                                    <option value="Community Event">Community Event</option>
+                                    <option value="Education">Education</option>
+                                    <option value="Emergency">Emergency</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Pin to Top?</label>
+                                <select class="form-select" id="annPinned">
+                                    <option value="false">No</option>
+                                    <option value="true">Yes (Pinned)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Content</label>
+                            <textarea class="form-control" id="annContent" rows="5" required placeholder="Write the announcement details here..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Cover Image URL <span class="text-muted fw-normal small">(Optional)</span></label>
+                            <input type="url" class="form-control" id="annImage" placeholder="https://example.com/image.jpg">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" onclick="saveAnnouncement()">
+                        <i class="fa-solid fa-paper-plane me-2"></i>Post Announcement
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Get current user from Supabase
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Get profile for name and role
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('full_name, role')
+                .eq('id', user.id)
+                .single();
+
+            if (!profile || profile.role !== 'admin') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            document.getElementById('adminName').textContent = profile.full_name.split(' ')[0];
+
+            // Load Counts from Supabase
+            const { count: resCount } = await supabaseClient.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'resident');
+            const { count: reqCount } = await supabaseClient.from('requests').select('*', { count: 'exact', head: true }).eq('status', 'Pending');
+            const { count: compCount } = await supabaseClient.from('complaints').select('*', { count: 'exact', head: true }).neq('status', 'Resolved');
+
+            // Update Stats
+            document.getElementById('statResidents').textContent = resCount || 0;
+            document.getElementById('statRequests').textContent = reqCount || 0;
+            document.getElementById('statComplaints').textContent = compCount || 0;
+
+            // Populate Table with latest 5 requests
+            const { data: latestRequests } = await supabaseClient
+                .from('requests')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            const tbody = document.getElementById('adminRequestsTable');
+            if (!latestRequests || latestRequests.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-3 text-muted">No requests found.</td></tr>';
+            } else {
+                tbody.innerHTML = ''; // Clear
+                latestRequests.forEach(req => {
+                    const tr = document.createElement('tr');
+                    
+                    let badgeClass = 'bg-secondary';
+                    if (req.status === 'Pending') badgeClass = 'bg-warning text-dark';
+                    if (req.status === 'Processing') badgeClass = 'bg-primary';
+                    if (req.status === 'Ready for Pickup') badgeClass = 'bg-success';
+
+                    tr.innerHTML = `
+                        <td class="fw-bold font-monospace text-primary">${req.tracking_id}</td>
+                        <td class="fw-semibold">${req.user_name}</td>
+                        <td><span class="small ${req.payment_status === 'Paid' ? 'text-success' : 'text-danger'} fw-bold">${req.payment_method} (${req.payment_status})</span></td>
+                        <td><span class="badge ${badgeClass} rounded-pill">${req.status}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-light text-primary border" onclick="openEditModal(${req.id})"><i class="fa-solid fa-pen-to-square"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            // Charts Setup
+            const ctx1 = document.getElementById('requestsChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Document Requests',
+                        data: [12, 19, 15, 25, 22, requests.length],
+                        backgroundColor: '#0f4c81',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            const ctx2 = document.getElementById('complaintsChart').getContext('2d');
+            
+            // Calculate complaint categories
+            let catCounts = { 'Sanitation': 2, 'Peace & Order': 5, 'Infrastructure': 3, 'Others': 1 };
+            complaints.forEach(c => {
+                if (catCounts[c.category]) catCounts[c.category]++;
+                else catCounts[c.category] = 1;
+            });
+
+            new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(catCounts),
+                    datasets: [{
+                        data: Object.values(catCounts),
+                        backgroundColor: ['#dc3545', '#ffc107', '#0f4c81', '#6c757d'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        });
+
+        // --- Sidebar & Navigation Logic ---
+        function showSection(sectionId) {
+            // Update UI Active State
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.classList.remove('active-link', 'bg-white', 'text-primary');
+                link.classList.add('text-white', 'text-opacity-75');
+            });
+
+            const activeLink = document.querySelector(`[data-section="${sectionId}"]`);
+            activeLink.classList.add('active-link', 'bg-white', 'text-primary');
+            activeLink.classList.remove('text-white', 'text-opacity-75');
+
+            // Update Title
+            const titles = {
+                'overview': 'Analytics Overview',
+                'residents': 'Resident Directory',
+                'requests': 'Document Requests',
+                'complaints': 'Complaints Management',
+                'announcements': 'Post Announcements'
+            };
+            document.getElementById('pageTitle').textContent = titles[sectionId];
+
+            // Hide all sections
+            document.getElementById('overviewSection').style.display = 'none';
+            document.getElementById('complaintsSection').style.display = 'none';
+            document.getElementById('requestsSection').style.display = 'none';
+            document.getElementById('announcementsSection').style.display = 'none';
+            
+            // Show target section
+            if (sectionId === 'overview') {
+                document.getElementById('overviewSection').style.display = 'block';
+            } else if (sectionId === 'complaints') {
+                document.getElementById('complaintsSection').style.display = 'block';
+                loadComplaints();
+            } else if (sectionId === 'requests') {
+                document.getElementById('requestsSection').style.display = 'block';
+                loadRequests();
+            } else if (sectionId === 'announcements') {
+                document.getElementById('announcementsSection').style.display = 'block';
+                loadAnnouncements();
+            }
+        }
+
+        async function loadRequests() {
+            const filter = document.getElementById('requestFilter').value;
+            const tbody = document.getElementById('allRequestsTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</td></tr>';
+
+            let query = supabaseClient.from('requests').select('*').order('created_at', { ascending: false });
+            if (filter !== 'All') {
+                query = query.eq('status', filter);
+            }
+
+            const { data: requests, error } = await query;
+
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error: ${error.message}</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            if (requests.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No requests found.</td></tr>';
+                return;
+            }
+
+            requests.forEach(req => {
+                const tr = document.createElement('tr');
+                let badgeClass = 'bg-secondary';
+                if (req.status === 'Pending') badgeClass = 'bg-warning text-dark';
+                if (req.status === 'Processing') badgeClass = 'bg-primary';
+                if (req.status === 'Ready for Pickup') badgeClass = 'bg-success';
+                if (req.status === 'Rejected') badgeClass = 'bg-danger';
+
+                tr.innerHTML = `
+                    <td class="font-monospace fw-bold text-primary">${req.tracking_id}</td>
+                    <td class="fw-semibold">${req.user_name}</td>
+                    <td>${req.type}</td>
+                    <td class="small text-muted">${req.payment_method}</td>
+                    <td><span class="badge ${req.payment_status === 'Paid' ? 'bg-success' : 'bg-danger'} rounded-pill">${req.payment_status}</span></td>
+                    <td><span class="badge ${badgeClass} rounded-pill">${req.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-light text-primary border" onclick="openEditModal(${req.id})"><i class="fa-solid fa-pen-to-square me-1"></i>Edit</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function loadComplaints() {
+            const filter = document.getElementById('complaintFilter').value;
+            const tbody = document.getElementById('complaintsTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</td></tr>';
+
+            let query = supabaseClient.from('complaints').select('*').order('created_at', { ascending: false });
+            if (filter !== 'All') {
+                query = query.eq('status', filter);
+            }
+
+            const { data: complaints, error } = await query;
+
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error: ${error.message}</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            if (complaints.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No complaints found.</td></tr>';
+                return;
+            }
+
+            complaints.forEach(comp => {
+                const tr = document.createElement('tr');
+                let statusBadge = 'bg-secondary';
+                if (comp.status === 'Pending') statusBadge = 'bg-danger';
+                if (comp.status === 'Investigating') statusBadge = 'bg-warning text-dark';
+                if (comp.status === 'Resolved') statusBadge = 'bg-success';
+
+                tr.innerHTML = `
+                    <td class="font-monospace fw-bold text-primary">${comp.tracking_id}</td>
+                    <td class="fw-semibold">${comp.user_name}</td>
+                    <td><span class="badge bg-light text-dark border">${comp.category}</span></td>
+                    <td class="small text-muted">${new Date(comp.created_at).toLocaleDateString()}</td>
+                    <td><span class="badge ${statusBadge} rounded-pill">${comp.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-primary rounded-pill px-3" onclick="openComplaintModal(${comp.id})">View Details</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function updateNotifications() {
+            const { data: recentComplaints } = await supabaseClient
+                .from('complaints')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            const badge = document.getElementById('notifBadge');
+            const complaintsBadge = document.getElementById('complaintsBadge');
+            const notifList = document.getElementById('notifList');
+            
+            if (!recentComplaints || recentComplaints.length === 0) {
+                notifList.innerHTML = '<li class="px-2 py-2 text-muted small text-center">No new reports.</li>';
+                badge.classList.add('d-none');
+                return;
+            }
+
+            const unreadCount = recentComplaints.filter(c => c.status === 'Pending').length;
+            badge.textContent = unreadCount;
+            badge.classList.toggle('d-none', unreadCount === 0);
+            complaintsBadge.textContent = unreadCount;
+
+            notifList.innerHTML = '';
+            recentComplaints.forEach(c => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <a class="dropdown-item p-2 rounded-3 mb-1" href="#" onclick="showSection('complaints'); openComplaintModal(${c.id})">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-danger-soft text-danger p-2 rounded-circle me-3"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                            <div>
+                                <div class="fw-bold small">New ${c.category} Report</div>
+                                <div class="text-muted" style="font-size: 11px;">From ${c.user_name} • ${new Date(c.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                            </div>
+                        </div>
+                    </a>
+                `;
+                notifList.appendChild(li);
+            });
+        }
+
+        window.openComplaintModal = async function(id) {
+            const { data: c, error } = await supabaseClient.from('complaints').select('*').eq('id', id).single();
+            if (error || !c) return;
+
+            document.getElementById('compModalId').value = c.id;
+            document.getElementById('compModalResident').textContent = c.user_name;
+            document.getElementById('compModalCategory').textContent = c.category;
+            document.getElementById('compModalLocation').textContent = c.location;
+            document.getElementById('compModalDate').textContent = new Date(c.created_at).toLocaleString();
+            document.getElementById('compModalTracking').textContent = c.tracking_id;
+            document.getElementById('compModalDescription').textContent = c.description;
+            document.getElementById('compModalStatus').value = c.status;
+
+            // Handle Image Preview
+            const imgContainer = document.getElementById('compModalImageContainer');
+            const img = document.getElementById('compModalImage');
+            const imgLink = document.getElementById('compModalImageLink');
+            
+            if (c.photo_url) {
+                img.src = c.photo_url;
+                imgLink.href = c.photo_url;
+                imgContainer.classList.remove('d-none');
+            } else {
+                imgContainer.classList.add('d-none');
+            }
+
+            // Handle Map Link
+            const mapLink = document.getElementById('compModalMapLink');
+            const locationQuery = encodeURIComponent(c.location + ", Barangay Tibungco, Davao City");
+            mapLink.href = `https://www.google.com/maps/search/?api=1&query=${locationQuery}`;
+
+            const modal = new bootstrap.Modal(document.getElementById('complaintModal'));
+            modal.show();
+        };
+
+        window.saveComplaintUpdate = async function() {
+            const id = parseInt(document.getElementById('compModalId').value);
+            const status = document.getElementById('compModalStatus').value;
+            
+            const { error } = await supabaseClient
+                .from('complaints')
+                .update({ status: status })
+                .eq('id', id);
+
+            if (!error) {
+                bootstrap.Modal.getInstance(document.getElementById('complaintModal')).hide();
+                loadComplaints();
+                updateNotifications();
+                
+                // Update stats
+                const { count } = await supabaseClient.from('complaints').select('*', { count: 'exact', head: true }).neq('status', 'Resolved');
+                document.getElementById('statComplaints').textContent = count || 0;
+            } else {
+                alert('Update failed: ' + error.message);
+            }
+        };
+
+        // Initialize Notifications on load
+        updateNotifications();
+
+        // --- Edit Modal Functions ---
+        window.openEditModal = async function(requestId) {
+            const { data: req } = await supabaseClient.from('requests').select('*').eq('id', requestId).single();
+            if (!req) return;
+
+            document.getElementById('modalRequestId').value = req.id;
+            document.getElementById('modalTrackingId').textContent = req.tracking_id;
+            document.getElementById('modalResident').textContent = req.user_name;
+            document.getElementById('modalDocType').textContent = req.type;
+            document.getElementById('modalPaymentMethod').textContent = req.payment_method || 'Cash';
+            document.getElementById('modalFee').textContent = `₱${(req.fee || 50).toFixed(2)}`;
+            document.getElementById('modalPaymentStatus').value = req.payment_status || 'Unpaid';
+            document.getElementById('modalStatus').value = req.status;
+            document.getElementById('modalRemarks').value = req.remarks || '';
+
+            // Handle Certificate Link
+            const certContainer = document.getElementById('modalCertContainer');
+            const certLink = document.getElementById('modalCertLink');
+            if (req.purok_cert_url) {
+                certLink.href = req.purok_cert_url;
+                certContainer.classList.remove('d-none');
+            } else {
+                certContainer.classList.add('d-none');
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('editRequestModal'));
+            modal.show();
+        };
+
+        window.saveRequestEdit = async function() {
+            const id = parseInt(document.getElementById('modalRequestId').value);
+            const newStatus = document.getElementById('modalStatus').value;
+            const newPaymentStatus = document.getElementById('modalPaymentStatus').value;
+            const newRemarks = document.getElementById('modalRemarks').value;
+
+            const { error } = await supabaseClient
+                .from('requests')
+                .update({ 
+                    status: newStatus, 
+                    payment_status: newPaymentStatus, 
+                    remarks: newRemarks 
+                })
+                .eq('id', id);
+
+            if (error) {
+                alert('Update failed: ' + error.message);
+                return;
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('editRequestModal')).hide();
+            loadRequests();
+            
+            // Update stats
+            const { count } = await supabaseClient.from('requests').select('*', { count: 'exact', head: true }).eq('status', 'Pending');
+            document.getElementById('statRequests').textContent = count || 0;
+        };
+
+        // --- Announcements Functions ---
+        async function loadAnnouncements() {
+            const tbody = document.getElementById('announcementsTableBody');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</td></tr>';
+
+            const { data: anns, error } = await supabaseClient
+                .from('announcements')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error: ${error.message}</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            if (anns.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No announcements posted yet.</td></tr>';
+                return;
+            }
+
+            anns.forEach(ann => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="small text-muted">${new Date(ann.created_at).toLocaleDateString()}</td>
+                    <td class="fw-bold">${ann.title}</td>
+                    <td><span class="badge bg-light text-dark border">${ann.category}</span></td>
+                    <td>${ann.is_pinned ? '<span class="badge bg-danger rounded-pill">Pinned</span>' : '<span class="text-muted small">Standard</span>'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-light text-danger border" onclick="deleteAnnouncement(${ann.id})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.openAnnouncementModal = function() {
+            document.getElementById('annId').value = '';
+            document.getElementById('announcementForm').reset();
+            const modal = new bootstrap.Modal(document.getElementById('announcementModal'));
+            modal.show();
+        };
+
+        window.saveAnnouncement = async function() {
+            const title = document.getElementById('annTitle').value;
+            const category = document.getElementById('annCategory').value;
+            const content = document.getElementById('annContent').value;
+            const image_url = document.getElementById('annImage').value;
+            const is_pinned = document.getElementById('annPinned').value === 'true';
+
+            if (!title || !content) {
+                alert('Please fill in title and content.');
+                return;
+            }
+
+            const { error } = await supabaseClient
+                .from('announcements')
+                .insert([{ title, category, content, image_url, is_pinned }]);
+
+            if (!error) {
+                bootstrap.Modal.getInstance(document.getElementById('announcementModal')).hide();
+                loadAnnouncements();
+            } else {
+                alert('Failed to post: ' + error.message);
+            }
+        };
+
+        window.deleteAnnouncement = async function(id) {
+            if (!confirm('Are you sure you want to delete this announcement?')) return;
+
+            const { error } = await supabaseClient
+                .from('announcements')
+                .delete()
+                .eq('id', id);
+
+            if (!error) {
+                loadAnnouncements();
+            } else {
+                alert('Delete failed: ' + error.message);
+            }
+        };
+    </script>
+    <script src="chatbot.js"></script>
+</body>
+</html>

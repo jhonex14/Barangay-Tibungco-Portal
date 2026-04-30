@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - Barangay Tibungco</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">
+                <img src="images/logo.png" alt="Logo" style="width:40px;height:40px;object-fit:contain;border-radius:50%;background:#fff;padding:2px;" class="me-2 shadow-sm">Brgy. Tibungco
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto fw-medium">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="services.html">E-Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="announcements.html">Announcements</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="about.html">About Us</a></li>
+                </ul>
+                <div class="ms-lg-3 mt-3 mt-lg-0" id="userMenu">
+                    <!-- Populated by app.js -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header Section -->
+    <div class="bg-primary text-white pt-5 pb-5 mt-5 text-center">
+        <div class="container mt-4 mb-4">
+            <h1 class="fw-bold display-5 mb-3">About Barangay Tibungco</h1>
+            <p class="lead text-white-50 mx-auto" style="max-width: 700px;">A progressive, safe, and digitally-empowered community dedicated to providing efficient and transparent public service.</p>
+        </div>
+    </div>
+
+    <div class="container py-5">
+        
+        <!-- Mission & Vision -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 h-100 bg-white p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-primary-soft text-primary me-3" style="width: 50px; height: 50px;">
+                            <i class="fa-solid fa-bullseye fs-5"></i>
+                        </div>
+                        <h4 class="fw-bold mb-0">Our Mission</h4>
+                    </div>
+                    <p class="text-muted">To deliver fast, transparent, and accessible barangay services to all residents through modern technology, while maintaining peace, order, and sustainable community development.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 h-100 bg-white p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-warning-soft text-warning me-3" style="width: 50px; height: 50px;">
+                            <i class="fa-regular fa-eye fs-5"></i>
+                        </div>
+                        <h4 class="fw-bold mb-0">Our Vision</h4>
+                    </div>
+                    <p class="text-muted">Barangay Tibungco envisions a highly developed, safe, and environmentally sustainable community with empowered citizens actively participating in local governance.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Officials Directory -->
+        <div class="text-center mb-5 mt-5">
+            <span class="badge bg-primary text-white mb-2 px-3 py-2 rounded-pill">Leadership</span>
+            <h2 class="fw-bold">Barangay Officials</h2>
+            <p class="text-muted">Meet the dedicated public servants of Barangay Tibungco.</p>
+        </div>
+
+        <!-- Captain -->
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 text-center p-4 border-top border-primary border-3">
+                    <img src="images/captain.jpg" alt="Barangay Captain Merjade Deles Calvo" class="rounded-circle mx-auto mb-3 shadow" style="width: 150px; height: 150px; object-fit: cover; object-position: top; border: 4px solid #0f4c81;">
+                    <h5 class="fw-bold mb-1">Hon. Merjade Deles Calvo</h5>
+                    <p class="text-primary fw-semibold mb-0"><i class="fa-solid fa-star text-warning me-1"></i>Barangay Captain</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kagawads -->
+        <div class="row g-4 mb-5 justify-content-center">
+            <div class="col-md-3 col-sm-6">
+                <div class="card border-0 shadow-sm rounded-4 text-center p-4">
+                    <img src="images/robert.jpg" alt="Kagawad Robert II Bustamante Calvo" class="rounded-circle mx-auto mb-3" style="width: 80px; height: 80px; object-fit: cover; object-position: top;">
+                    <h6 class="fw-bold mb-1">Hon. Robert II Bustamante Calvo</h6>
+                    <small class="text-muted">Barangay Kagawad</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card border-0 shadow-sm rounded-4 text-center p-4">
+                    <img src="https://ui-avatars.com/api/?name=Art+Deles&background=1b64a5&color=fff&size=80" alt="Kagawad" class="rounded-circle mx-auto mb-3" style="width: 80px;">
+                    <h6 class="fw-bold mb-1">Hon. Art Joseph Ramos Deles</h6>
+                    <small class="text-muted">Barangay Kagawad</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card border-0 shadow-sm rounded-4 text-center p-4">
+                    <img src="https://ui-avatars.com/api/?name=Ramiro+De+Guia&background=1b64a5&color=fff&size=80" alt="Kagawad" class="rounded-circle mx-auto mb-3" style="width: 80px;">
+                    <h6 class="fw-bold mb-1">Hon. Ramiro Luna De Guia</h6>
+                    <small class="text-muted">Barangay Kagawad</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card border-0 shadow-sm rounded-4 text-center p-4">
+                    <img src="https://ui-avatars.com/api/?name=Welfredo+Calag&background=1b64a5&color=fff&size=80" alt="Kagawad" class="rounded-circle mx-auto mb-3" style="width: 80px;">
+                    <h6 class="fw-bold mb-1">Hon. Welfredo Tocmo Calag</h6>
+                    <small class="text-muted">Barangay Kagawad</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card border-0 shadow-sm rounded-4 text-center p-4">
+                    <img src="https://ui-avatars.com/api/?name=Marlon+Banluta&background=1b64a5&color=fff&size=80" alt="Kagawad" class="rounded-circle mx-auto mb-3" style="width: 80px;">
+                    <h6 class="fw-bold mb-1">Hon. Marlon Lauron Banluta</h6>
+                    <small class="text-muted">Barangay Kagawad</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card border-0 shadow-sm rounded-4 text-center p-4">
+                    <img src="https://ui-avatars.com/api/?name=Josefino+Nayre&background=1b64a5&color=fff&size=80" alt="Kagawad" class="rounded-circle mx-auto mb-3" style="width: 80px;">
+                    <h6 class="fw-bold mb-1">Hon. Josefino Aguilon Nayre</h6>
+                    <small class="text-muted">Barangay Kagawad</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card border-0 shadow-sm rounded-4 text-center p-4">
+                    <img src="https://ui-avatars.com/api/?name=Nino+Deles&background=1b64a5&color=fff&size=80" alt="Kagawad" class="rounded-circle mx-auto mb-3" style="width: 80px;">
+                    <h6 class="fw-bold mb-1">Hon. Niño Eian Ansaldo Deles</h6>
+                    <small class="text-muted">Barangay Kagawad</small>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Emergency Contacts -->
+        <div class="card border-0 shadow-sm rounded-4 bg-danger text-white p-4 p-md-5 mt-5">
+            <div class="row align-items-center text-center text-md-start">
+                <div class="col-md-8 mb-4 mb-md-0">
+                    <h3 class="fw-bold mb-2"><i class="fa-solid fa-phone-volume me-2"></i>Emergency Hotlines</h3>
+                    <p class="mb-0 text-white-50">In case of emergency, please contact the following numbers immediately.</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <div class="bg-white text-danger fw-bold py-2 px-4 rounded-pill d-inline-block mb-2 shadow-sm fs-5">
+                        Central 911
+                    </div>
+                    <br>
+                    <div class="bg-white text-danger fw-bold py-2 px-4 rounded-pill d-inline-block shadow-sm">
+                        Barangay Patrol: (082) 123-4567
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center text-md-start">
+            <p class="text-white-50 mb-0 small">Smart Web-Based Management Portal &copy; 2026. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+    <script src="chatbot.js"></script>
+</body>
+</html>

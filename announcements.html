@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Announcements - Barangay Tibungco</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">
+                <img src="images/logo.png" alt="Logo" style="width:40px;height:40px;object-fit:contain;border-radius:50%;background:#fff;padding:2px;" class="me-2 shadow-sm">Brgy. Tibungco
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto fw-medium">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="services.html">E-Services</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="announcements.html">Announcements</a></li>
+                    <li class="nav-item"><a class="nav-link" href="complaints.html">Report Issue</a></li>
+                </ul>
+                <div class="ms-lg-3 mt-3 mt-lg-0" id="userMenu">
+                    <!-- Populated by app.js -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <div class="bg-white border-bottom pt-5 pb-4 mt-5">
+        <div class="container mt-4">
+            <h2 class="fw-bold"><i class="fa-solid fa-bullhorn text-warning me-2"></i>Official Announcements</h2>
+            <p class="text-muted">Stay up to date with the latest news, advisories, and events in Barangay Tibungco.</p>
+        </div>
+    </div>
+
+    <div class="container py-5">
+        <div class="row g-4" id="announcementsList">
+            <!-- Populated by JS -->
+            <div class="col-12 text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Announcement Detail Modal -->
+    <div class="modal fade" id="announcementDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div id="modalAnnImage" class="w-100" style="height: 300px; background: center/cover; display: none;"></div>
+                <div class="modal-header border-0 pb-0">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 p-md-5 pt-0">
+                    <span id="modalAnnCategory" class="badge bg-primary mb-3 px-3 py-2 rounded-pill small"></span>
+                    <h2 id="modalAnnTitle" class="fw-bold mb-3"></h2>
+                    <p id="modalAnnDate" class="text-muted small mb-4"></p>
+                    <hr class="opacity-10 mb-4">
+                    <div id="modalAnnContent" class="text-dark lh-lg" style="white-space: pre-wrap;"></div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-auto">
+        <div class="container text-center text-md-start">
+            <p class="text-white-50 mb-0 small">Smart Web-Based Management Portal &copy; 2026. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+    <script>
+        let allAnnouncements = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const list = document.getElementById('announcementsList');
+            
+            const { data: anns, error } = await supabaseClient
+                .from('announcements')
+                .select('*')
+                .order('is_pinned', { ascending: false })
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                list.innerHTML = `<div class="alert alert-danger">Error loading announcements: ${error.message}</div>`;
+                return;
+            }
+
+            allAnnouncements = anns || [];
+
+            if (allAnnouncements.length === 0) {
+                list.innerHTML = '<div class="col-12 text-center py-5 text-muted"><h4>No announcements yet.</h4><p>Check back later for updates.</p></div>';
+                return;
+            }
+
+            list.innerHTML = '';
+            allAnnouncements.forEach((ann, index) => {
+                const col = document.createElement('div');
+                
+                if (ann.is_pinned) {
+                    col.className = 'col-12';
+                    col.innerHTML = `
+                        <div class="card border-0 shadow-sm rounded-4 bg-primary text-white overflow-hidden mb-4">
+                            <div class="row g-0">
+                                <div class="col-md-8 p-4 p-md-5 d-flex flex-column justify-content-center">
+                                    <span class="badge bg-danger align-self-start mb-3 px-3 py-2 rounded-pill"><i class="fa-solid fa-thumbtack me-1"></i> Pinned Advisory</span>
+                                    <h3 class="fw-bold mb-3">${ann.title}</h3>
+                                    <p class="mb-4 text-white-50">${ann.content.substring(0, 200)}${ann.content.length > 200 ? '...' : ''}</p>
+                                    <div class="d-flex align-items-center">
+                                        <button onclick="viewAnnouncement(${index})" class="btn btn-light btn-sm rounded-pill px-4 fw-bold me-3">Read More</button>
+                                        <span class="small opacity-75"><i class="fa-regular fa-calendar me-1"></i> ${new Date(ann.created_at).toLocaleDateString()}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 d-none d-md-block" style="background: url('${ann.image_url || 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80'}') center/cover;">
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    col.className = 'col-md-6';
+                    col.innerHTML = `
+                        <div class="card h-100 border-0 shadow-sm rounded-4">
+                            <div class="card-body p-4">
+                                <span class="badge bg-info text-dark mb-2">${ann.category}</span>
+                                <h5 class="fw-bold">${ann.title}</h5>
+                                <p class="text-muted small mb-3"><i class="fa-regular fa-clock me-1"></i> ${new Date(ann.created_at).toLocaleDateString()}</p>
+                                <p class="text-dark">${ann.content.substring(0, 150)}${ann.content.length > 150 ? '...' : ''}</p>
+                                <button onclick="viewAnnouncement(${index})" class="btn btn-link text-primary fw-bold text-decoration-none small p-0">Read More <i class="fa-solid fa-arrow-right ms-1"></i></button>
+                            </div>
+                        </div>
+                    `;
+                }
+                list.appendChild(col);
+            });
+        });
+
+        window.viewAnnouncement = function(index) {
+            const ann = allAnnouncements[index];
+            if (!ann) return;
+
+            document.getElementById('modalAnnTitle').textContent = ann.title;
+            document.getElementById('modalAnnCategory').textContent = ann.category;
+            document.getElementById('modalAnnDate').innerHTML = `<i class="fa-regular fa-calendar me-1"></i> Posted on ${new Date(ann.created_at).toLocaleDateString()}`;
+            document.getElementById('modalAnnContent').textContent = ann.content;
+
+            const modalImg = document.getElementById('modalAnnImage');
+            if (ann.image_url) {
+                modalImg.style.backgroundImage = `url('${ann.image_url}')`;
+                modalImg.style.display = 'block';
+            } else {
+                modalImg.style.display = 'none';
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('announcementDetailModal'));
+            modal.show();
+        };
+    </script>
+    <script src="chatbot.js"></script>
+</body>
+</html>

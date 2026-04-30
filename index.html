@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barangay Tibungco Smart Portal</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="index.html">
+                <img src="images/logo.png" alt="Brgy. Tibungco Logo" style="width:48px; height:48px; object-fit:contain; border-radius:50%; background:#fff; padding:2px;" class="me-2 shadow-sm">
+                <span>BRGY. TIBUNGCO<br><small class="fs-6 fw-normal d-block" style="line-height:0.8;">Smart Portal</small></span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto fw-medium">
+                    <li class="nav-item"><a class="nav-link active" href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="services.html">E-Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="announcements.html">Announcements</a></li>
+                    <li class="nav-item"><a class="nav-link" href="complaints.html">Report Issue</a></li>
+                    <li class="nav-item"><a class="nav-link" href="about.html">About Us</a></li>
+                </ul>
+                <div class="ms-lg-3 mt-3 mt-lg-0" id="userMenu">
+                    <a href="login.html" class="btn btn-outline-light me-2">Login</a>
+                    <a href="register.html" class="btn btn-warning fw-bold text-dark">Register</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section d-flex align-items-end">
+        <!-- Dark overlay for text readability -->
+        <div class="hero-overlay"></div>
+        <div class="container hero-content pb-5">
+            <div class="row align-items-end">
+                <div class="col-lg-7">
+                    <span class="badge bg-warning text-dark mb-3 px-3 py-2 rounded-pill fw-bold">Official Digital Platform</span>
+                    <h1 class="display-4 fw-bold text-white mb-3">Welcome to the<br>Smart Barangay Portal</h1>
+                    <p class="lead text-white-50 mb-4">Experience faster document requests, real-time announcements, and efficient incident reporting right at your fingertips.</p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="services.html" class="btn btn-warning btn-lg fw-bold text-dark shadow-sm px-4">Request Document</a>
+                        <a href="complaints.html" class="btn btn-outline-light btn-lg shadow-sm px-4">Report Issue</a>
+                    </div>
+                </div>
+                <div class="col-lg-5 d-none d-lg-flex justify-content-end">
+                    <div class="row g-3 hero-cards">
+                        <div class="col-6">
+                            <div class="bg-white p-3 rounded-3 shadow text-center">
+                                <i class="fa-solid fa-file-signature text-primary fs-2 mb-2"></i>
+                                <h6 class="fw-bold mb-0 text-dark">Clearance</h6>
+                                <small class="text-muted">Fast Process</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-white p-3 rounded-3 shadow text-center">
+                                <i class="fa-solid fa-bullhorn text-warning fs-2 mb-2"></i>
+                                <h6 class="fw-bold mb-0 text-dark">Updates</h6>
+                                <small class="text-muted">Real-time</small>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="bg-primary text-white p-3 rounded-3 shadow text-start">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="fw-bold">My Request</span>
+                                    <span class="badge bg-success">Ready</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-warning" style="width: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Quick Links -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Our Core Services</h2>
+                <p class="text-muted">Access essential barangay services online</p>
+            </div>
+            <div class="row g-4">
+                <!-- Service 1 -->
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm service-card">
+                        <div class="card-body text-center p-4">
+                            <div class="icon-circle bg-primary-soft text-primary mb-3 mx-auto">
+                                <i class="fa-solid fa-file-contract fs-3"></i>
+                            </div>
+                            <h5 class="card-title fw-bold">Document Requests</h5>
+                            <p class="card-text text-muted">Request Barangay Clearance, Indigency, and Business Permits online.</p>
+                            <a href="services.html" class="text-primary fw-bold text-decoration-none">Request Now <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Service 2 -->
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm service-card">
+                        <div class="card-body text-center p-4">
+                            <div class="icon-circle bg-danger-soft text-danger mb-3 mx-auto">
+                                <i class="fa-solid fa-triangle-exclamation fs-3"></i>
+                            </div>
+                            <h5 class="card-title fw-bold">Incident Reporting</h5>
+                            <p class="card-text text-muted">Report complaints, broken facilities, or security issues easily.</p>
+                            <a href="complaints.html" class="text-danger fw-bold text-decoration-none">Report Now <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Service 3 -->
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm service-card">
+                        <div class="card-body text-center p-4">
+                            <div class="icon-circle bg-success-soft text-success mb-3 mx-auto">
+                                <i class="fa-solid fa-newspaper fs-3"></i>
+                            </div>
+                            <h5 class="card-title fw-bold">Latest Updates</h5>
+                            <p class="card-text text-muted">Stay informed with the latest announcements and barangay events.</p>
+                            <a href="announcements.html" class="text-success fw-bold text-decoration-none">View Updates <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-auto">
+        <div class="container text-center text-md-start">
+            <div class="row align-items-center">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <h5 class="fw-bold mb-1"><i class="fa-solid fa-building-shield text-warning me-2"></i>Barangay Tibungco</h5>
+                    <p class="text-white-50 mb-0 small">Smart Web-Based Management Portal &copy; 2026. All Rights Reserved.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-white-50 me-3"><i class="fa-brands fa-facebook fs-5"></i></a>
+                    <a href="#" class="text-white-50"><i class="fa-solid fa-envelope fs-5"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Initialize App
+        App.init();
+    </script>
+    <!-- Chatbot Script -->
+    <script src="chatbot.js"></script>
+</body>
+
+</html>
