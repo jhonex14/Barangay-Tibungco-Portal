@@ -15,13 +15,13 @@ const App = {
         // Initialize Auth listener and check initial state
         this.checkAuthStatus();
         
+        // Start Global Clock
+        this.startClock();
+
         // If page requires auth, handle it
         if (document.body.hasAttribute('data-require-auth')) {
             await this.requireAuth();
         }
-
-        // Start Global Clock
-        this.startClock();
     },
 
     // Require user to be logged in to access page
@@ -301,34 +301,45 @@ const App = {
     },
 
     startClock: function() {
-        // Find navbar container or brand
-        const brand = document.querySelector('.navbar-brand');
-        if (!brand) return;
-
-        // Check if clock already exists
         if (document.getElementById('navClock')) return;
 
-        // Create Clock Element
         const clockSpan = document.createElement('div');
         clockSpan.id = 'navClock';
-        clockSpan.className = 'ms-3 d-none d-md-flex flex-column justify-content-center border-start ps-3 border-white border-opacity-25';
         clockSpan.style.fontSize = '11px';
         clockSpan.style.lineHeight = '1.2';
-        clockSpan.style.color = 'rgba(255,255,255,0.8)';
         
-        brand.parentElement.insertBefore(clockSpan, brand.nextSibling);
-
         const updateTime = () => {
             const now = new Date();
             const options = { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' };
             const dateStr = now.toLocaleDateString('en-US', options);
             const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             
-            clockSpan.innerHTML = `
-                <div class="fw-bold text-white" style="letter-spacing: 0.5px;">${timeStr}</div>
-                <div style="opacity: 0.7;">${dateStr}</div>
-            `;
+            if (clockSpan.classList.contains('text-dark')) {
+                clockSpan.innerHTML = `
+                    <div class="fw-bold" style="letter-spacing: 0.5px;">${timeStr}</div>
+                    <div style="opacity: 0.7;">${dateStr}</div>
+                `;
+            } else {
+                clockSpan.innerHTML = `
+                    <div class="fw-bold text-white" style="letter-spacing: 0.5px;">${timeStr}</div>
+                    <div style="opacity: 0.7;">${dateStr}</div>
+                `;
+            }
         };
+
+        const brand = document.querySelector('.navbar-brand');
+        const adminHeader = document.querySelector('header .gap-3');
+        
+        if (brand) {
+            clockSpan.className = 'ms-3 d-none d-md-flex flex-column justify-content-center border-start ps-3 border-white border-opacity-25';
+            clockSpan.style.color = 'rgba(255,255,255,0.8)';
+            brand.parentElement.insertBefore(clockSpan, brand.nextSibling);
+        } else if (adminHeader) {
+            clockSpan.className = 'me-3 d-none d-md-flex flex-column justify-content-center border-end pe-3 border-dark border-opacity-25 text-dark text-end';
+            adminHeader.insertBefore(clockSpan, adminHeader.firstChild);
+        } else {
+            return;
+        }
 
         updateTime();
         setInterval(updateTime, 1000);

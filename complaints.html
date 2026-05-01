@@ -23,17 +23,20 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="index.html">
-                <img src="images/logo.png" alt="Logo" style="width:40px;height:40px;object-fit:contain;border-radius:50%;background:#fff;padding:2px;" class="me-2 shadow-sm">Brgy. Tibungco
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="index.html">
+                <img src="images/logo.png" alt="Brgy. Tibungco Logo" style="width:48px; height:48px; object-fit:contain; border-radius:50%; background:#fff; padding:2px;" class="me-2 shadow-sm">
+                <span>BRGY. TIBUNGCO<br><small class="fs-6 fw-normal d-block" style="line-height:0.8;">Smart Portal</small></span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto fw-medium">
+                <ul class="navbar-nav ms-auto fw-medium">
                     <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="services.html">E-Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="announcements.html">Announcements</a></li>
                     <li class="nav-item"><a class="nav-link active" href="complaints.html">Report Issue</a></li>
+                    <li class="nav-item"><a class="nav-link" href="about.html">About Us</a></li>
                 </ul>
                 <div class="ms-lg-3 mt-3 mt-lg-0" id="userMenu">
                     <!-- Populated by app.js -->
@@ -76,9 +79,9 @@
                                     <textarea class="form-control bg-light border-0" id="description" rows="4" required placeholder="Please describe the incident in detail..."></textarea>
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label fw-semibold">Photo Evidence (Optional)</label>
-                                    <input class="form-control bg-light border-0" type="file" id="photo" accept="image/*">
-                                    <small class="text-muted">Upload a clear photo of the incident (Max 5MB).</small>
+                                    <label class="form-label fw-semibold">Photo Evidence <span class="text-danger">*</span></label>
+                                    <input class="form-control bg-light border-0" type="file" id="photo" accept="image/*" required>
+                                    <small class="text-muted"><i class="fa-solid fa-circle-info me-1"></i>A clear photo of the incident is required (Max 5MB).</small>
                                 </div>
                                 <div class="col-12 mt-4">
                                     <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold rounded-pill shadow-sm">Submit Report</button>
@@ -129,6 +132,17 @@
                 const location = document.getElementById('location').value;
                 const description = document.getElementById('description').value;
                 const photoFile = document.getElementById('photo').files[0];
+
+                // Photo is required
+                if (!photoFile) {
+                    alertBox.className = 'alert alert-danger';
+                    alertBox.innerHTML = '<i class="fa-solid fa-circle-exclamation me-2"></i>Photo evidence is required. Please upload a clear photo of the incident.';
+                    alertBox.classList.remove('d-none');
+                    alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    btn.innerHTML = originalBtnText;
+                    btn.disabled = false;
+                    return;
+                }
 
                 let photoUrl = null;
                 if (photoFile) {
