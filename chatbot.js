@@ -393,7 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Payments
         if (q.match(/\b(pay|payment|gcash|paymaya|cash|fee|cost)\b/)) {
             return {
-                text: "For E-Services, the standard fee is ₱50.00. We accept <strong>Cash on Pickup</strong> or E-wallet payments like <strong>GCash</strong> and <strong>PayMaya</strong>. You will be provided a QR code if you select E-wallet.",
+                text: "For E-Services, the standard fee is ₱50.00. We accept online payments like <strong>QRPH</strong>, <strong>GCash</strong>, and <strong>PayMaya</strong>. You will be provided a QR code to scan when you select a payment method.",
                 choices: [
                     { label: "Get Clearance", query: "clearance" },
                     { label: "Main Menu", query: "menu" }

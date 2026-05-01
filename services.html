@@ -124,7 +124,7 @@
                                     <label class="form-label fw-semibold">Payment Method</label>
                                     <select class="form-select bg-light border-0" id="paymentMethod" required onchange="handlePaymentChange()">
                                         <option value="" selected disabled>Select payment...</option>
-                                        <option value="Cash">Cash on Pickup</option>
+                                        <option value="QRPH">QRPH</option>
                                         <option value="GCash">GCash</option>
                                         <option value="PayMaya">PayMaya</option>
                                     </select>
@@ -133,7 +133,10 @@
                                 <!-- Payment Details (Hidden by default) -->
                                 <div id="eWalletDetails" class="col-12 d-none">
                                     <div class="alert alert-info border-0 shadow-sm rounded-4 p-4 text-center">
-                                        <h6 class="fw-bold mb-3">Scan to Pay (₱50.00)</h6>
+                                        <h6 class="fw-bold mb-2">Scan to Pay (₱50.00)</h6>
+                                        <div class="mb-3">
+                                            <img id="paymentLogoImg" src="" alt="Payment Logo" style="height: 35px; display: none;">
+                                        </div>
                                         <div class="bg-white p-3 d-inline-block rounded-3 mb-3 shadow-sm">
                                             <img id="qrCodeImg" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=BarangayTibungcoPayment" alt="QR Code" style="width: 150px;">
                                         </div>
@@ -173,10 +176,22 @@
             window.handlePaymentChange = function() {
                 const method = document.getElementById('paymentMethod').value;
                 const eWalletDiv = document.getElementById('eWalletDetails');
-                if (method === 'GCash' || method === 'PayMaya') {
+                const paymentLogoImg = document.getElementById('paymentLogoImg');
+                
+                if (method === 'GCash' || method === 'PayMaya' || method === 'QRPH') {
                     eWalletDiv.classList.remove('d-none');
+                    paymentLogoImg.style.display = 'inline-block';
+                    
+                    if (method === 'GCash') {
+                        paymentLogoImg.src = 'images/GCash-Logo.png';
+                    } else if (method === 'PayMaya') {
+                        paymentLogoImg.src = 'images/maya-logo-black.png';
+                    } else if (method === 'QRPH') {
+                        paymentLogoImg.src = 'images/QRPH.jpg';
+                    }
                 } else {
                     eWalletDiv.classList.add('d-none');
+                    paymentLogoImg.style.display = 'none';
                 }
             };
 
@@ -267,7 +282,7 @@
                             purpose: purpose,
                             pickup_date: pickupDate,
                             payment_method: paymentMethod,
-                            payment_status: (paymentMethod === 'Cash') ? 'Unpaid' : 'Paid',
+                            payment_status: 'Paid',
                             status: 'Pending',
                             // New columns
                             first_name: firstName,

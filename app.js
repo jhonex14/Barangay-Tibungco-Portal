@@ -75,18 +75,21 @@ const App = {
 
         if (user) {
             try {
-                const { data: profile } = await supabaseClient
+                const { data: profile, error } = await supabaseClient
                     .from('profiles')
                     .select('id, role, full_name')
                     .eq('id', user.id)
                     .single();
 
-                if (profile) {
+                if (profile && !error) {
                     localStorage.setItem('user_profile', JSON.stringify(profile));
                     this.renderUserMenu(profile, user);
+                } else {
+                    this.renderUserMenu(null, user);
                 }
             } catch (err) {
                 console.error("Profile fetch error:", err);
+                this.renderUserMenu(null, user);
             }
         } else {
             localStorage.removeItem('user_profile');
@@ -125,12 +128,12 @@ const App = {
                     </div>
                     <div class="dropdown">
                         <button class="btn btn-warning fw-bold dropdown-toggle rounded-pill px-3 shadow-sm" type="button" data-bs-toggle="dropdown">
-                            <i class="fa-solid fa-user-shield me-1"></i> Admin Panel
+                            <i class="fa-solid fa-user-shield me-1"></i> Admin ${name ? name.split(' ')[0] : ''}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2">
                             <li><a class="dropdown-item py-2" href="dashboard.html"><i class="fa-solid fa-chart-line me-2 text-muted"></i>Dashboard</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item py-2 text-danger" href="#" onclick="App.logout()"><i class="fa-solid fa-power-off me-2"></i>Logout</a></li>
+                            <li><a class="dropdown-item py-2 text-danger" href="#" onclick="App.logout()"><i class="fa-solid fa-arrow-right-from-bracket me-2"></i>Logout</a></li>
                         </ul>
                     </div>
                 </div>
@@ -210,8 +213,8 @@ const App = {
                 });
             } else {
                 // Resident sees status updates
-                const { data: reqs } = await supabaseClient.from('requests').select('*').eq('user_id', userId).neq('status', 'Pending').order('updated_at', { ascending: false }).limit(5);
-                const { data: comps } = await supabaseClient.from('complaints').select('*').eq('user_id', userId).neq('status', 'Pending').order('updated_at', { ascending: false }).limit(5);
+                const { data: reqs } = await supabaseClient.from('requests').select('*').eq('user_id', userId).neq('status', 'Pending').order('created_at', { ascending: false }).limit(5);
+                const { data: comps } = await supabaseClient.from('complaints').select('*').eq('user_id', userId).neq('status', 'Pending').order('created_at', { ascending: false }).limit(5);
 
                 (reqs || []).forEach(r => {
                     allNotifs.push({

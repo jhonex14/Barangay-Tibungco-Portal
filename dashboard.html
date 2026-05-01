@@ -538,11 +538,40 @@
                     <div class="bg-light rounded-3 p-3 mb-4">
                         <div class="row g-2 small text-muted">
                             <div class="col-6"><span class="fw-semibold text-dark">Tracking ID:</span><br><span id="modalTrackingId" class="font-monospace text-primary fw-bold"></span></div>
-                            <div class="col-6"><span class="fw-semibold text-dark">Resident:</span><br><span id="modalResident"></span></div>
                             <div class="col-6"><span class="fw-semibold text-dark">Document:</span><br><span id="modalDocType"></span></div>
-                            <div class="col-6"><span class="fw-semibold text-dark">Payment Method:</span><br><span id="modalPaymentMethod" class="badge bg-light text-dark border"></span></div>
-                            <div class="col-6"><span class="fw-semibold text-dark">Fee:</span><br><span id="modalFee" class="fw-bold text-success">₱0.00</span></div>
-                            <div class="col-6" id="modalCertContainer"><span class="fw-semibold text-dark">Certificate:</span><br><a id="modalCertLink" href="#" target="_blank" class="small text-primary"><i class="fa-solid fa-file-image me-1"></i>View Uploaded Cert</a></div>
+                            
+                            <div class="col-12"><hr class="my-2 border-secondary opacity-25"></div>
+                            
+                            <div class="col-12">
+                                <label class="form-label fw-semibold text-dark mb-1">Resident Full Name:</label>
+                                <input type="text" class="form-control form-control-sm" id="modalResident">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-semibold text-dark mb-1">Age:</label>
+                                <input type="number" class="form-control form-control-sm" id="modalAge" onchange="calculateDiscount()">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-semibold text-dark mb-1">Civil Status:</label>
+                                <select class="form-select form-select-sm" id="modalCivilStatus">
+                                    <option value="Single">Single</option>
+                                    <option value="Married">Married</option>
+                                    <option value="Widow">Widow</option>
+                                    <option value="Widower">Widower</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold text-dark mb-1">Complete Address:</label>
+                                <textarea class="form-control form-control-sm" id="modalAddress" rows="2"></textarea>
+                            </div>
+                            
+                            <div class="col-12"><hr class="my-2 border-secondary opacity-25"></div>
+                            
+                            <div class="col-6"><span class="fw-semibold text-dark">Payment Method:</span><br><span id="modalPaymentMethod" class="badge bg-light text-dark border mt-1"></span></div>
+                            <div class="col-6">
+                                <label class="form-label fw-semibold text-dark mb-1">Fee (₱): <span id="discountBadge" class="badge bg-success small d-none"></span></label>
+                                <input type="number" class="form-control form-control-sm fw-bold text-success" id="modalFee" step="0.01">
+                            </div>
+                            <div class="col-12 mt-2" id="modalCertContainer"><span class="fw-semibold text-dark">Certificate:</span><br><a id="modalCertLink" href="#" target="_blank" class="small text-primary"><i class="fa-solid fa-file-image me-1"></i>View Uploaded Cert</a></div>
                         </div>
                     </div>
                     <input type="hidden" id="modalRequestId">
@@ -1219,16 +1248,66 @@
         updateNotifications();
 
         // --- Edit Modal Functions ---
+        function getBaseFee(docType) {
+            if (docType === 'Certificate of Indigency') return 0;
+            if (docType === 'Business Clearance') return 150;
+            return 50; // Default
+        }
+
+        window.calculateDiscount = function() {
+            const ageInput = document.getElementById('modalAge').value;
+            const feeInput = document.getElementById('modalFee');
+            const discountBadge = document.getElementById('discountBadge');
+            const docType = document.getElementById('modalDocType').textContent;
+            
+            const baseFee = getBaseFee(docType);
+            
+            if (baseFee === 0) {
+                feeInput.value = 0;
+                discountBadge.classList.add('d-none');
+                return;
+            }
+            
+            if (!ageInput) {
+                feeInput.value = baseFee;
+                discountBadge.classList.add('d-none');
+                return;
+            }
+            
+            const age = parseInt(ageInput);
+            
+            if (age < 17 || age >= 60) {
+                feeInput.value = (baseFee * 0.8).toFixed(2); // 20% discount
+                discountBadge.classList.remove('d-none');
+                if (age < 17) discountBadge.textContent = 'Student (-20%)';
+                if (age >= 60) discountBadge.textContent = 'Senior (-20%)';
+            } else {
+                feeInput.value = baseFee.toFixed(2);
+                discountBadge.classList.add('d-none');
+            }
+        };
+
         window.openEditModal = async function(requestId) {
             const { data: req } = await supabaseClient.from('requests').select('*').eq('id', requestId).single();
             if (!req) return;
 
+            const { data: res } = await supabaseClient.from('profiles').select('*').eq('id', req.user_id).single();
+
             document.getElementById('modalRequestId').value = req.id;
             document.getElementById('modalTrackingId').textContent = req.tracking_id;
-            document.getElementById('modalResident').textContent = req.user_name;
             document.getElementById('modalDocType').textContent = req.type;
+            
+            document.getElementById('modalResident').value = res ? res.full_name : req.user_name;
+            document.getElementById('modalAge').value = res && res.age ? res.age : '';
+            document.getElementById('modalCivilStatus').value = res && res.civil_status ? res.civil_status : 'Single';
+            document.getElementById('modalAddress').value = res ? (res.address || `Purok ${res.purok || ''}, Tibungco, Davao City`) : '';
+
             document.getElementById('modalPaymentMethod').textContent = req.payment_method || 'Cash';
-            document.getElementById('modalFee').textContent = `₱${(req.fee || 50).toFixed(2)}`;
+            document.getElementById('modalFee').value = req.fee || getBaseFee(req.type);
+            
+            // Calculate and display discount badge if applicable
+            calculateDiscount();
+
             document.getElementById('modalPaymentStatus').value = req.payment_status || 'Unpaid';
             document.getElementById('modalStatus').value = req.status;
             document.getElementById('modalRemarks').value = req.remarks || '';
@@ -1260,19 +1339,41 @@
             const newStatus = document.getElementById('modalStatus').value;
             const newPaymentStatus = document.getElementById('modalPaymentStatus').value;
             const newRemarks = document.getElementById('modalRemarks').value;
+            const newFee = parseFloat(document.getElementById('modalFee').value);
+            
+            const newName = document.getElementById('modalResident').value;
+            const newAge = document.getElementById('modalAge').value;
+            const newCivilStatus = document.getElementById('modalCivilStatus').value;
+            const newAddress = document.getElementById('modalAddress').value;
 
-            const { error } = await supabaseClient
+            const { data: reqData, error: reqError } = await supabaseClient
                 .from('requests')
                 .update({ 
                     status: newStatus, 
                     payment_status: newPaymentStatus, 
-                    remarks: newRemarks 
+                    remarks: newRemarks,
+                    fee: newFee,
+                    user_name: newName
                 })
-                .eq('id', id);
+                .eq('id', id)
+                .select()
+                .single();
 
-            if (error) {
-                alert('Update failed: ' + error.message);
+            if (reqError) {
+                alert('Update failed: ' + reqError.message);
                 return;
+            }
+
+            if (reqData && reqData.user_id) {
+                await supabaseClient
+                    .from('profiles')
+                    .update({
+                        full_name: newName,
+                        age: newAge ? parseInt(newAge) : null,
+                        civil_status: newCivilStatus,
+                        address: newAddress
+                    })
+                    .eq('id', reqData.user_id);
             }
 
             bootstrap.Modal.getInstance(document.getElementById('editRequestModal')).hide();
