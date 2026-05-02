@@ -682,7 +682,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
                 <div class="modal-header bg-primary text-white border-0 py-3 px-4">
-                    <h5 class="modal-title fw-bold">
+                    <h5 id="annModalTitle" class="modal-title fw-bold">
                         <i class="fa-solid fa-bullhorn me-2"></i>Post New Announcement
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -695,7 +695,7 @@
                             <input type="text" class="form-control" id="annTitle" required placeholder="e.g. Community Assembly">
                         </div>
                         <div class="row g-3 mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label fw-semibold">Category</label>
                                 <select class="form-select" id="annCategory" required>
                                     <option value="General News">General News</option>
@@ -705,7 +705,11 @@
                                     <option value="Emergency">Emergency</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Date</label>
+                                <input type="date" class="form-control" id="annDate" required>
+                            </div>
+                            <div class="col-md-4">
                                 <label class="form-label fw-semibold">Pin to Top?</label>
                                 <select class="form-select" id="annPinned">
                                     <option value="false">No</option>
@@ -725,7 +729,7 @@
                 </div>
                 <div class="modal-footer border-0 px-4 pb-4 pt-0">
                     <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" onclick="saveAnnouncement()">
+                    <button type="button" id="annSaveButton" class="btn btn-primary rounded-pill px-4 fw-bold" onclick="saveAnnouncement()">
                         <i class="fa-solid fa-paper-plane me-2"></i>Post Announcement
                     </button>
                 </div>
@@ -798,11 +802,11 @@
                     if (req.status === 'Ready for Pickup') badgeClass = 'bg-success';
 
                     tr.innerHTML = `
-                        <td class="fw-bold font-monospace text-primary">${req.tracking_id}</td>
-                        <td class="fw-semibold">${req.user_name}</td>
-                        <td>${req.type}</td>
-                        <td><span class="small ${req.payment_status === 'Paid' ? 'text-success' : 'text-danger'} fw-bold">${req.payment_method} (${req.payment_status})</span></td>
-                        <td><span class="badge ${badgeClass} rounded-pill">${req.status}</span></td>
+                        <td class="fw-bold font-monospace text-primary">${escapeHtml(req.tracking_id)}</td>
+                        <td class="fw-semibold">${escapeHtml(req.user_name)}</td>
+                        <td>${escapeHtml(req.type)}</td>
+                        <td><span class="small ${req.payment_status === 'Paid' ? 'text-success' : 'text-danger'} fw-bold">${escapeHtml(req.payment_method)} (${escapeHtml(req.payment_status)})</span></td>
+                        <td><span class="badge ${badgeClass} rounded-pill">${escapeHtml(req.status)}</span></td>
                         <td>
                             <button class="btn btn-sm btn-light text-primary border" onclick="openEditModal(${req.id})"><i class="fa-solid fa-pen-to-square"></i></button>
                         </td>
@@ -986,9 +990,9 @@
             residents.forEach(res => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="fw-bold text-dark">${res.full_name}</td>
-                    <td><span class="badge bg-light text-dark border"><i class="fa-solid fa-location-dot me-1 text-primary"></i>${res.purok || 'N/A'}</span></td>
-                    <td class="small text-muted font-monospace">${res.phone || 'N/A'}</td>
+                    <td class="fw-bold text-dark">${escapeHtml(res.full_name || 'N/A')}</td>
+                    <td><span class="badge bg-light text-dark border"><i class="fa-solid fa-location-dot me-1 text-primary"></i>${escapeHtml(res.purok || 'N/A')}</span></td>
+                    <td class="small text-muted font-monospace">${escapeHtml(res.phone || 'N/A')}</td>
                     <td><span class="badge bg-success-soft text-success rounded-pill px-3"><i class="fa-solid fa-circle-check me-1"></i>Verified</span></td>
                 `;
                 tbody.appendChild(tr);
@@ -1041,12 +1045,12 @@
                 if (req.status === 'Rejected') badgeClass = 'bg-danger';
 
                 tr.innerHTML = `
-                    <td class="font-monospace fw-bold text-primary">${req.tracking_id}</td>
-                    <td class="fw-semibold">${req.user_name}</td>
-                    <td>${req.type}</td>
-                    <td class="small text-muted">${req.payment_method}</td>
-                    <td><span class="badge ${req.payment_status === 'Paid' ? 'bg-success' : 'bg-danger'} rounded-pill">${req.payment_status}</span></td>
-                    <td><span class="badge ${badgeClass} rounded-pill">${req.status}</span></td>
+                    <td class="font-monospace fw-bold text-primary">${escapeHtml(req.tracking_id)}</td>
+                    <td class="fw-semibold">${escapeHtml(req.user_name)}</td>
+                    <td>${escapeHtml(req.type)}</td>
+                    <td class="small text-muted">${escapeHtml(req.payment_method)}</td>
+                    <td><span class="badge ${req.payment_status === 'Paid' ? 'bg-success' : 'bg-danger'} rounded-pill">${escapeHtml(req.payment_status)}</span></td>
+                    <td><span class="badge ${badgeClass} rounded-pill">${escapeHtml(req.status)}</span></td>
                     <td>
                         <button class="btn btn-sm btn-light text-primary border" onclick="openEditModal(${req.id})"><i class="fa-solid fa-pen-to-square me-1"></i>Edit</button>
                     </td>
@@ -1086,11 +1090,11 @@
                 if (comp.status === 'Resolved') statusBadge = 'bg-success';
 
                 tr.innerHTML = `
-                    <td class="font-monospace fw-bold text-primary">${comp.tracking_id}</td>
-                    <td class="fw-semibold">${comp.user_name}</td>
-                    <td><span class="badge bg-light text-dark border">${comp.category}</span></td>
-                    <td class="small text-muted">${new Date(comp.created_at).toLocaleDateString()}</td>
-                    <td><span class="badge ${statusBadge} rounded-pill">${comp.status}</span></td>
+                    <td class="font-monospace fw-bold text-primary">${escapeHtml(comp.tracking_id)}</td>
+                    <td class="fw-semibold">${escapeHtml(comp.user_name)}</td>
+                    <td><span class="badge bg-light text-dark border">${escapeHtml(comp.category)}</span></td>
+                    <td class="small text-muted">${escapeHtml(new Date(comp.created_at).toLocaleDateString())}</td>
+                    <td><span class="badge ${statusBadge} rounded-pill">${escapeHtml(comp.status)}</span></td>
                     <td>
                         <button class="btn btn-sm btn-primary rounded-pill px-3" onclick="openComplaintModal(${comp.id})">View Details</button>
                     </td>
@@ -1127,8 +1131,8 @@
                         icon: 'fa-triangle-exclamation',
                         color: 'text-danger',
                         bgColor: 'bg-danger-soft',
-                        title: `New ${c.category} Report`,
-                        subtitle: `From ${c.user_name}`,
+                        title: `New ${escapeHtml(c.category)} Report`,
+                        subtitle: `From ${escapeHtml(c.user_name)}`,
                         onClick: `showSection('complaints'); openComplaintModal(${c.id})`
                     });
                 });
@@ -1142,8 +1146,8 @@
                         icon: 'fa-file-invoice',
                         color: 'text-primary',
                         bgColor: 'bg-primary-soft',
-                        title: `New ${r.type} Request`,
-                        subtitle: `From ${r.user_name}`,
+                        title: `New ${escapeHtml(r.type)} Request`,
+                        subtitle: `From ${escapeHtml(r.user_name)}`,
                         onClick: `showSection('requests'); openEditModal(${r.id})`
                     });
                 });
@@ -1177,8 +1181,8 @@
                         <div class="d-flex align-items-center">
                             <div class="${item.bgColor} ${item.color} p-2 rounded-circle me-3"><i class="fa-solid ${item.icon}"></i></div>
                             <div>
-                                <div class="fw-bold small">${item.title}</div>
-                                <div class="text-muted" style="font-size: 11px;">${item.subtitle} • ${new Date(item.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                                <div class="fw-bold small">${escapeHtml(item.title)}</div>
+                                <div class="text-muted" style="font-size: 11px;">${escapeHtml(item.subtitle)} • ${new Date(item.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
                             </div>
                         </div>
                     </a>
@@ -1398,12 +1402,41 @@
 
             try {
                 const { data: req } = await supabaseClient.from('requests').select('*').eq('id', requestId).single();
-                const { data: res } = await supabaseClient.from('profiles').select('*').eq('id', req.user_id).single();
+                if (!req) {
+                    alert('Error: Document request not found.');
+                    modal.hide();
+                    editBtn.innerHTML = '<i class="fa-solid fa-print me-2"></i>Finalize & Print';
+                    editBtn.disabled = false;
+                    return;
+                }
 
-                document.getElementById('editDocName').value = res.full_name.toUpperCase();
-                document.getElementById('editDocAge').value = res.age || '';
-                document.getElementById('editDocStatus').value = (res.civil_status || 'Single');
-                document.getElementById('editDocAddress').value = res.address || `Purok ${res.purok || ''}, Tibungco, Davao City`;
+                let res = null;
+                if (req.user_id) {
+                    const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', req.user_id).single();
+                    res = profile;
+                }
+
+                const fallbackName = document.getElementById('modalResident').value || req.user_name || '';
+                const fallbackAge = document.getElementById('modalAge').value || '';
+                const fallbackStatus = document.getElementById('modalCivilStatus').value || 'Single';
+                const fallbackAddress = document.getElementById('modalAddress').value || `Purok ${req.purok || ''}, Tibungco, Davao City`;
+
+                if (!res && !fallbackName) {
+                    alert('Error: Resident profile missing and no resident name is available. Please update the request before preparing the document.');
+                    modal.hide();
+                    editBtn.innerHTML = '<i class="fa-solid fa-print me-2"></i>Finalize & Print';
+                    editBtn.disabled = false;
+                    return;
+                }
+
+                if (!res) {
+                    console.warn('Resident profile was deleted. Using saved request details where available.');
+                }
+
+                document.getElementById('editDocName').value = (res ? res.full_name : fallbackName).toUpperCase();
+                document.getElementById('editDocAge').value = res && res.age ? res.age : fallbackAge;
+                document.getElementById('editDocStatus').value = res ? (res.civil_status || 'Single') : fallbackStatus;
+                document.getElementById('editDocAddress').value = res ? (res.address || `Purok ${res.purok || ''}, Tibungco, Davao City`) : fallbackAddress;
                 document.getElementById('editDocPurpose').value = req.remarks || 'employment requirement';
                 
                 const now = new Date();
@@ -1416,6 +1449,8 @@
             } catch (err) {
                 alert("Error loading editor: " + err.message);
                 modal.hide();
+                editBtn.innerHTML = '<i class="fa-solid fa-print me-2"></i>Finalize & Print';
+                editBtn.disabled = false;
             }
         };
 
@@ -1471,13 +1506,15 @@
             }
 
             anns.forEach(ann => {
+                const displayDate = ann.publish_date ? new Date(ann.publish_date).toLocaleDateString() : new Date(ann.created_at).toLocaleDateString();
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="small text-muted">${new Date(ann.created_at).toLocaleDateString()}</td>
-                    <td class="fw-bold">${ann.title}</td>
-                    <td><span class="badge bg-light text-dark border">${ann.category}</span></td>
+                    <td class="small text-muted">${escapeHtml(displayDate)}</td>
+                    <td class="fw-bold">${escapeHtml(ann.title)}</td>
+                    <td><span class="badge bg-light text-dark border">${escapeHtml(ann.category)}</span></td>
                     <td>${ann.is_pinned ? '<span class="badge bg-danger rounded-pill">Pinned</span>' : '<span class="text-muted small">Standard</span>'}</td>
                     <td>
+                        <button class="btn btn-sm btn-light text-primary border me-2" onclick="openAnnouncementEditModal(${ann.id})"><i class="fa-solid fa-pen-to-square"></i></button>
                         <button class="btn btn-sm btn-light text-danger border" onclick="deleteAnnouncement(${ann.id})"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 `;
@@ -1488,25 +1525,95 @@
         window.openAnnouncementModal = function() {
             document.getElementById('annId').value = '';
             document.getElementById('announcementForm').reset();
+            document.getElementById('annDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('annModalTitle').innerHTML = '<i class="fa-solid fa-bullhorn me-2"></i>Post New Announcement';
+            document.getElementById('annSaveButton').innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i>Post Announcement';
+            const modal = new bootstrap.Modal(document.getElementById('announcementModal'));
+            modal.show();
+        };
+
+        window.openAnnouncementEditModal = async function(id) {
+            const { data: ann, error } = await supabaseClient.from('announcements').select('*').eq('id', id).single();
+            if (error || !ann) {
+                alert('Unable to load announcement for editing.');
+                return;
+            }
+
+            document.getElementById('annId').value = ann.id;
+            document.getElementById('annTitle').value = ann.title || '';
+            document.getElementById('annCategory').value = ann.category || 'General News';
+            document.getElementById('annDate').value = ann.publish_date ? new Date(ann.publish_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+            document.getElementById('annPinned').value = ann.is_pinned ? 'true' : 'false';
+            document.getElementById('annContent').value = ann.content || '';
+            document.getElementById('annImage').value = ann.image_url || '';
+            document.getElementById('annModalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square me-2"></i>Edit Announcement';
+            document.getElementById('annSaveButton').innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i>Save Changes';
+
             const modal = new bootstrap.Modal(document.getElementById('announcementModal'));
             modal.show();
         };
 
         window.saveAnnouncement = async function() {
+            const id = document.getElementById('annId').value;
             const title = document.getElementById('annTitle').value;
             const category = document.getElementById('annCategory').value;
+            const dateValue = document.getElementById('annDate').value;
             const content = document.getElementById('annContent').value;
             const image_url = document.getElementById('annImage').value;
             const is_pinned = document.getElementById('annPinned').value === 'true';
 
-            if (!title || !content) {
-                alert('Please fill in title and content.');
+            if (!title || !content || !dateValue) {
+                alert('Please fill in title, date, and content.');
                 return;
             }
 
-            const { error } = await supabaseClient
+            const publish_date = new Date(dateValue).toISOString();
+            const announcementData = { title, category, publish_date, content, image_url, is_pinned };
+
+            if (id) {
+                let { error } = await supabaseClient
+                    .from('announcements')
+                    .update(announcementData)
+                    .eq('id', id);
+
+                if (error && error.message && error.message.includes('publish_date')) {
+                    const fallbackData = { title, category, content, image_url, is_pinned };
+                    const { error: fallbackError } = await supabaseClient
+                        .from('announcements')
+                        .update(fallbackData)
+                        .eq('id', id);
+                    error = fallbackError;
+                }
+
+                if (!error) {
+                    bootstrap.Modal.getInstance(document.getElementById('announcementModal')).hide();
+                    loadAnnouncements();
+                    return;
+                }
+
+                alert('Failed to update announcement: ' + error.message);
+                return;
+            }
+
+            let { error } = await supabaseClient
                 .from('announcements')
-                .insert([{ title, category, content, image_url, is_pinned }]);
+                .insert([announcementData]);
+
+            if (error && error.message && error.message.includes('publish_date')) {
+                const fallbackData = { title, category, content, image_url, is_pinned };
+                const { error: fallbackError } = await supabaseClient
+                    .from('announcements')
+                    .insert([fallbackData]);
+
+                if (!fallbackError) {
+                    bootstrap.Modal.getInstance(document.getElementById('announcementModal')).hide();
+                    loadAnnouncements();
+                    alert('Announcement posted, but the date field is not saved because the database does not have a publish_date column yet.');
+                    return;
+                }
+
+                error = fallbackError;
+            }
 
             if (!error) {
                 bootstrap.Modal.getInstance(document.getElementById('announcementModal')).hide();

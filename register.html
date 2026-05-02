@@ -64,12 +64,11 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold text-muted small">Age</label>
-                                <input type="number" class="form-control bg-light" id="regAge" required placeholder="Min. 15" min="15" max="120"
+                                <input type="number" class="form-control bg-light" id="regAge" required placeholder="Min. 15" min="15" max="120" step="1" inputmode="numeric"
                                     oninput="
-                                        const v = parseInt(this.value);
                                         const msg = document.getElementById('ageError');
-                                        if (this.value !== '' && v < 15) {
-                                            this.value = '';
+                                        const v = this.value === '' ? null : parseInt(this.value, 10);
+                                        if (this.value !== '' && !Number.isNaN(v) && v < 15) {
                                             msg.classList.remove('d-none');
                                         } else {
                                             msg.classList.add('d-none');
@@ -177,6 +176,37 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="app.js"></script>
     <script>
+        async function redirectIfAuthenticated() {
+            if (!window.supabase || !window.supabaseClient) return;
+
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session || !session.user) return;
+
+                const { data: profile, error: profileError } = await supabaseClient
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (profileError) {
+                    console.warn("Profile fetch error while redirecting:", profileError);
+                }
+
+                const role = profile ? profile.role : 'resident';
+                window.location.replace(role === 'admin' ? 'dashboard.html' : 'resident-dashboard.html');
+            } catch (err) {
+                console.warn("Auth redirect check failed:", err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', redirectIfAuthenticated);
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                redirectIfAuthenticated();
+            }
+        });
+
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
