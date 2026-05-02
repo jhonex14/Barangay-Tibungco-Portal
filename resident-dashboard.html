@@ -99,6 +99,7 @@
                                         <th>Document Type</th>
                                         <th>Date Requested</th>
                                         <th>Status</th>
+                                        <th>Admin Note</th>
                                     </tr>
                                 </thead>
                                 <tbody id="requestsTableBody">
@@ -211,11 +212,15 @@
                     if (req.status === 'Completed') badgeClass = 'bg-dark';
                     if (req.status === 'Rejected') badgeClass = 'bg-danger';
 
+                    const requestedDate = req.created_at ? new Date(req.created_at).toLocaleDateString() : 'N/A';
+                    const noteText = req.remarks ? escapeHtml(req.remarks) : 'No note';
+
                     tr.innerHTML = `
                         <td class="fw-bold font-monospace text-primary">${req.tracking_id}</td>
                         <td>${req.type}</td>
-                        <td><span class="small fw-semibold ${req.payment_status === 'Paid' ? 'text-success' : 'text-danger'}">${req.payment_method} (${req.payment_status})</span></td>
+                        <td>${requestedDate}</td>
                         <td><span class="badge ${badgeClass} rounded-pill">${req.status}</span></td>
+                        <td class="small text-truncate" style="max-width: 220px;">${noteText}</td>
                     `;
                     tbody.appendChild(tr);
                 });
