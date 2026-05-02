@@ -1,6 +1,6 @@
 // Supabase Configuration
 const supabaseUrl = 'https://awotfselbqtovxwxoxeu.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3b3Rmc2VsYnF0b3Z4d3hveGV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjQ3NjksImV4cCI6MjA5MzA0MDc2OX0.PDxtXswBrwbTGSg1uQgd86PyqKYRDsM-jL8Zf-_ga7w';
+const supabaseKey = 'sb_publishable_KME3YN1GzA5cQaqwNGsKzg_WSs_1qIo';
 
 if (!window.supabase) {
     console.error("Supabase library failed to load!");
@@ -9,6 +9,15 @@ if (!window.supabase) {
 // Rename to supabaseClient to avoid collision with window.supabase
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 console.log("Supabase Client initialized.");
+
+const escapeHtml = (unsafe) => {
+    return String(unsafe ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+};
 
 const App = {
     init: async function() {
@@ -106,7 +115,9 @@ const App = {
         if (!navRight) return;
 
         const role = profile ? profile.role : 'resident';
-        const name = profile ? (profile.full_name || user.email) : user.email;
+        const displayName = profile ? (profile.full_name || user.email) : user.email;
+        const safeDisplayName = escapeHtml(displayName);
+        const safeFirstName = escapeHtml((displayName || '').split(' ')[0] || '');
 
         if (role === 'admin') {
             navRight.innerHTML = `
@@ -128,7 +139,7 @@ const App = {
                     </div>
                     <div class="dropdown">
                         <button class="btn btn-warning fw-bold dropdown-toggle rounded-pill px-3 shadow-sm" type="button" data-bs-toggle="dropdown">
-                            <i class="fa-solid fa-user-shield me-1"></i> Admin ${name ? name.split(' ')[0] : ''}
+                            <i class="fa-solid fa-user-shield me-1"></i> Admin ${safeFirstName}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2">
                             <li><a class="dropdown-item py-2" href="dashboard.html"><i class="fa-solid fa-chart-line me-2 text-muted"></i>Dashboard</a></li>
@@ -157,7 +168,7 @@ const App = {
                     </div>
                     <div class="dropdown">
                         <button class="btn btn-light rounded-pill px-3 dropdown-toggle text-primary fw-bold" type="button" data-bs-toggle="dropdown">
-                            <i class="fa-solid fa-circle-user me-1"></i> ${name ? name.split(' ')[0] : 'Resident'}
+                            <i class="fa-solid fa-circle-user me-1"></i> ${safeFirstName || 'Resident'}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2">
                             <li><a class="dropdown-item py-2" href="resident-dashboard.html"><i class="fa-solid fa-id-card me-2 text-muted"></i>My Profile</a></li>
@@ -219,7 +230,7 @@ const App = {
                 (reqs || []).forEach(r => {
                     allNotifs.push({
                         title: 'Document Update',
-                        text: `Your ${r.type} is now <strong>${r.status}</strong>`,
+                        text: `Your ${escapeHtml(r.type)} is now <strong>${escapeHtml(r.status)}</strong>`,
                         time: new Date(r.updated_at || r.created_at),
                         timestamp: new Date(r.updated_at || r.created_at).getTime(),
                         icon: 'fa-file-invoice',
@@ -231,7 +242,7 @@ const App = {
                 (comps || []).forEach(c => {
                     allNotifs.push({
                         title: 'Report Update',
-                        text: `Your ${c.category} is <strong>${c.status}</strong>`,
+                        text: `Your ${escapeHtml(c.category)} is <strong>${escapeHtml(c.status)}</strong>`,
                         time: new Date(c.updated_at || c.created_at),
                         timestamp: new Date(c.updated_at || c.created_at).getTime(),
                         icon: 'fa-circle-check',
