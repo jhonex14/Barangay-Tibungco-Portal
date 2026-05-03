@@ -6,6 +6,7 @@
     <title>Admin Dashboard - Brgy. Tibungco</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.21.3/index.js"></script>
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="styles.css">
@@ -214,16 +215,25 @@
                         <i class="fa-solid fa-bullhorn me-2"></i> Announcements
                     </a>
                 </li>
+                <li>
+                    <a href="#" onclick="showSection('settings')" class="nav-link sidebar-link text-white text-opacity-75" data-section="settings">
+                        <i class="fa-solid fa-gear me-2"></i> Settings
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="toggleAdminChat()" class="nav-link sidebar-link text-white text-opacity-75" data-section="chat">
+                        <i class="fa-solid fa-comments me-2"></i> Live Chat
+                        <span class="badge bg-danger ms-2" id="chatBadge" style="display:none;">0</span>
+                    </a>
+                </li>
             </ul>
             <hr class="border-secondary opacity-50 mt-auto mb-4">
             <div class="dropdown">
                 <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-                    <img src="https://ui-avatars.com/api/?name=Admin+User&background=ffc107&color=fff" alt="admin" width="32" height="32" class="rounded-circle me-2">
+                    <img src="https://ui-avatars.com/api/?name=Admin+User&background=ffc107&color=fff" alt="admin" width="32" height="32" class="rounded-circle me-2" id="sidebarAvatar" style="object-fit:cover;">
                     <strong id="adminName">Admin</strong>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark text-small shadow border-0">
-                    <li><a class="dropdown-item" href="#">Settings</a></li>
-                    <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item text-danger" href="#" onclick="App.logout()">Sign out</a></li>
                 </ul>
             </div>
@@ -520,6 +530,232 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Settings Section -->
+            <div id="settingsSection" class="p-4 p-md-5" style="display: none;">
+                <div class="row g-4">
+                    <!-- Change Password -->
+                    <div class="col-lg-6">
+                        <div class="card border-0 shadow-sm rounded-4">
+                            <div class="card-header bg-white border-bottom-0 pt-4 px-4">
+                                <h5 class="fw-bold mb-0"><i class="fa-solid fa-lock me-2 text-primary"></i>Change Password</h5>
+                                <p class="text-muted small mb-0 mt-1">Update your account password</p>
+                            </div>
+                            <div class="card-body p-4">
+                                <div id="passwordAlert" class="alert d-none" role="alert"></div>
+                                <form id="changePasswordForm">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold small text-muted">New Password</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-key text-muted"></i></span>
+                                            <input type="password" class="form-control border-start-0 bg-light" id="settingsNewPassword" required minlength="6" placeholder="Min. 6 characters">
+                                        </div>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label fw-semibold small text-muted">Confirm New Password</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-check-double text-muted"></i></span>
+                                            <input type="password" class="form-control border-start-0 bg-light" id="settingsConfirmPassword" required minlength="6" placeholder="Re-enter password">
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold"><i class="fa-solid fa-shield-halved me-2"></i>Update Password</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Profile -->
+                    <div class="col-lg-6">
+                        <div class="card border-0 shadow-sm rounded-4">
+                            <div class="card-header bg-white border-bottom-0 pt-4 px-4">
+                                <h5 class="fw-bold mb-0"><i class="fa-solid fa-user-pen me-2 text-warning"></i>Admin Profile</h5>
+                                <p class="text-muted small mb-0 mt-1">Update your display information</p>
+                            </div>
+                            <div class="card-body p-4">
+                                <div id="profileAlert" class="alert d-none" role="alert"></div>
+                                <!-- Avatar Upload -->
+                                <div class="text-center mb-4">
+                                    <div class="position-relative d-inline-block">
+                                        <img src="https://ui-avatars.com/api/?name=A&background=0f4c81&color=fff&size=100" id="adminAvatarPreview" alt="Avatar" class="rounded-circle shadow" style="width:100px;height:100px;object-fit:cover;border:3px solid #ffc107;">
+                                        <label for="adminAvatarUpload" class="position-absolute bottom-0 end-0 bg-warning rounded-circle d-flex align-items-center justify-content-center shadow" style="width:32px;height:32px;cursor:pointer;">
+                                            <i class="fa-solid fa-camera text-dark small"></i>
+                                        </label>
+                                        <input type="file" id="adminAvatarUpload" accept="image/*" class="d-none">
+                                    </div>
+                                    <div id="avatarUploadStatus" class="small text-muted mt-2"></div>
+                                </div>
+                                <form id="updateProfileForm">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold small text-muted">Full Name</label>
+                                        <input type="text" class="form-control bg-light" id="settingsFullName" required>
+                                    </div>
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-6">
+                                            <label class="form-label fw-semibold small text-muted">Phone</label>
+                                            <input type="tel" class="form-control bg-light" id="settingsPhone" placeholder="09XXXXXXXXX">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label fw-semibold small text-muted">Email</label>
+                                            <input type="email" class="form-control bg-light" id="settingsEmail" disabled>
+                                        </div>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label fw-semibold small text-muted">Purok / Zone</label>
+                                        <input type="text" class="form-control bg-light" id="settingsPurok" placeholder="e.g. Purok 1">
+                                    </div>
+                                    <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold text-dark"><i class="fa-solid fa-floppy-disk me-2"></i>Save Profile</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Preferences -->
+                    <div class="col-lg-6">
+                        <div class="card border-0 shadow-sm rounded-4">
+                            <div class="card-header bg-white border-bottom-0 pt-4 px-4">
+                                <h5 class="fw-bold mb-0"><i class="fa-solid fa-sliders me-2 text-info"></i>System Preferences</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                                    <div>
+                                        <h6 class="fw-bold mb-0">Desktop Notifications</h6>
+                                        <small class="text-muted">Get alerts for new requests and complaints</small>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="settingsNotifToggle" checked style="width:3em;height:1.5em;">
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                                    <div>
+                                        <h6 class="fw-bold mb-0">Sound Alerts</h6>
+                                        <small class="text-muted">Play sound on new notifications</small>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="settingsSoundToggle" style="width:3em;height:1.5em;">
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center py-3">
+                                    <div>
+                                        <h6 class="fw-bold mb-0">Remember Last Section</h6>
+                                        <small class="text-muted">Open last viewed section on login</small>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="settingsRememberSection" checked style="width:3em;height:1.5em;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Log -->
+                    <div class="col-lg-6">
+                        <div class="card border-0 shadow-sm rounded-4">
+                            <div class="card-header bg-white border-bottom-0 pt-4 px-4">
+                                <h5 class="fw-bold mb-0"><i class="fa-solid fa-clock-rotate-left me-2 text-success"></i>Account Info</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item bg-transparent px-0 d-flex justify-content-between">
+                                        <span class="text-muted">Account Role</span>
+                                        <span class="badge bg-primary rounded-pill px-3" id="settingsRole">Admin</span>
+                                    </div>
+                                    <div class="list-group-item bg-transparent px-0 d-flex justify-content-between">
+                                        <span class="text-muted">Account Created</span>
+                                        <span class="fw-semibold" id="settingsCreatedAt">—</span>
+                                    </div>
+                                    <div class="list-group-item bg-transparent px-0 d-flex justify-content-between">
+                                        <span class="text-muted">Last Sign In</span>
+                                        <span class="fw-semibold" id="settingsLastSignIn">—</span>
+                                    </div>
+                                    <div class="list-group-item bg-transparent px-0 d-flex justify-content-between">
+                                        <span class="text-muted">User ID</span>
+                                        <span class="font-monospace small text-muted" id="settingsUserId" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;">—</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Danger Zone -->
+                    <div class="col-12">
+                        <div class="card border-danger border-opacity-25 shadow-sm rounded-4">
+                            <div class="card-header bg-white border-bottom-0 pt-4 px-4">
+                                <h5 class="fw-bold mb-0 text-danger"><i class="fa-solid fa-triangle-exclamation me-2"></i>Danger Zone</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3">
+                                    <div>
+                                        <h6 class="fw-bold mb-0">Clear All Cached Data</h6>
+                                        <small class="text-muted">Clears local storage and reloads. You will stay logged in.</small>
+                                    </div>
+                                    <button class="btn btn-outline-danger rounded-pill px-4 fw-bold" onclick="if(confirm('Clear all cached data? You will stay logged in.')){localStorage.clear();location.reload();}">
+                                        <i class="fa-solid fa-broom me-1"></i>Clear Cache
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Chat Floating Modal -->
+            <div id="chatSection" class="floating-chat-modal" style="display: none; position: fixed; bottom: 20px; right: 20px; width: 750px; height: 500px; background: white; border-radius: 12px; box-shadow: 0 15px 50px rgba(0,0,0,0.3); z-index: 1050; overflow: hidden; border: 1px solid #ddd; flex-direction: column;">
+                <div class="bg-primary text-white p-2 d-flex justify-content-between align-items-center" style="cursor: default;">
+                    <h6 class="mb-0 ms-2 fw-bold"><i class="fa-solid fa-comments me-2"></i>Live Chat Admin</h6>
+                    <div>
+                        <button class="btn btn-sm text-white opacity-75 hover-opacity-100" onclick="minimizeAdminChat()"><i class="fa-solid fa-minus"></i></button>
+                        <button class="btn btn-sm text-white opacity-75 hover-opacity-100" onclick="closeAdminChat()"><i class="fa-solid fa-times"></i></button>
+                    </div>
+                </div>
+                <div class="d-flex" style="height: calc(100% - 40px);">
+                    <!-- Conversations List -->
+                    <div class="bg-white border-end" style="width: 280px; min-width: 280px;">
+                        <div class="p-2 border-bottom bg-light">
+                            <h6 class="fw-bold mb-0 text-primary small"><i class="fa-solid fa-inbox me-1"></i> Conversations</h6>
+                        </div>
+                        <div id="chatConvoList" style="overflow-y: auto; height: calc(100% - 36px);">
+                            <div class="p-4 text-center text-muted">
+                                <i class="fa-solid fa-comments fs-2 opacity-25 mb-2"></i>
+                                <p class="small mb-0">No conversations</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Chat Area -->
+                    <div class="flex-grow-1 d-flex flex-column bg-light">
+                        <div id="chatAreaHeader" class="p-2 bg-white border-bottom d-flex align-items-center" style="display:none !important;">
+                            <img id="chatUserAvatar" src="https://ui-avatars.com/api/?name=U&background=0f4c81&color=fff&size=30" class="rounded-circle me-2" width="30" height="30" style="object-fit:cover;">
+                            <div>
+                                <h6 class="mb-0 fw-bold small" id="chatUserName">Select a conversation</h6>
+                                <small class="text-muted" id="chatUserEmail" style="font-size:10px;"></small>
+                            </div>
+                        </div>
+                        <div id="adminChatMessages" class="flex-grow-1 p-2" style="overflow-y: auto;">
+                            <div class="h-100 d-flex align-items-center justify-content-center text-center text-muted">
+                                <div>
+                                    <i class="fa-solid fa-comment-dots fs-1 opacity-25 mb-2 d-block"></i>
+                                    <p class="small">Resident messages will appear here</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="adminChatInputArea" class="p-2 bg-white border-top position-relative" style="display:none;">
+                            <div id="adminEmojiPickerContainer" style="display:none; position:absolute; bottom: 100%; right: 10px; z-index: 1000; box-shadow: 0 5px 15px rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden;">
+                                <emoji-picker></emoji-picker>
+                            </div>
+                            <form id="adminChatForm" class="d-flex gap-2">
+                                <button type="button" class="btn btn-light btn-sm rounded-circle text-muted" id="adminEmojiBtn" style="width: 32px; height: 32px; padding: 0;"><i class="fa-regular fa-face-smile"></i></button>
+                                <input type="text" class="form-control form-control-sm rounded-pill px-3" id="adminChatInput" placeholder="Type your reply..." autocomplete="off" required>
+                                <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold"><i class="fa-solid fa-paper-plane"></i></button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Floating Chat Bubble (Minimized State) -->
+            <button id="adminChatBubble" class="btn btn-primary rounded-circle shadow-lg" style="display: none; position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; z-index: 1050; align-items: center; justify-content: center; font-size: 24px; transition: transform 0.3s;" onclick="toggleAdminChat(true)">
+                <i class="fa-solid fa-comment-dots"></i>
+                <span class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-circle" id="adminChatBubbleBadge" style="display:none; font-size:10px; padding: 4px 6px;">0</span>
+            </button>
         </main>
     </div>
 
@@ -937,7 +1173,8 @@
                 'residents': 'Resident Directory',
                 'requests': 'Document Requests',
                 'complaints': 'Complaints Management',
-                'announcements': 'Post Announcements'
+                'announcements': 'Post Announcements',
+                'settings': 'Account Settings'
             };
             document.getElementById('pageTitle').textContent = titles[sectionId];
 
@@ -947,6 +1184,7 @@
             document.getElementById('complaintsSection').style.display = 'none';
             document.getElementById('requestsSection').style.display = 'none';
             document.getElementById('announcementsSection').style.display = 'none';
+            document.getElementById('settingsSection').style.display = 'none';
             
             // Show target section
             if (sectionId === 'overview') {
@@ -963,7 +1201,36 @@
             } else if (sectionId === 'announcements') {
                 document.getElementById('announcementsSection').style.display = 'block';
                 loadAnnouncements();
+            } else if (sectionId === 'settings') {
+                document.getElementById('settingsSection').style.display = 'block';
+                loadSettings();
             }
+        }
+
+        function toggleAdminChat(forceOpen = false) {
+            const chatSec = document.getElementById('chatSection');
+            const bubble = document.getElementById('adminChatBubble');
+            const badge = document.getElementById('adminChatBubbleBadge');
+
+            if (chatSec.style.display === 'none' || forceOpen) {
+                chatSec.style.display = 'flex';
+                bubble.style.display = 'none';
+                badge.style.display = 'none';
+                badge.textContent = '0';
+                loadAdminChat();
+            } else {
+                minimizeAdminChat();
+            }
+        }
+
+        function minimizeAdminChat() {
+            document.getElementById('chatSection').style.display = 'none';
+            document.getElementById('adminChatBubble').style.display = 'flex';
+        }
+
+        function closeAdminChat() {
+            document.getElementById('chatSection').style.display = 'none';
+            document.getElementById('adminChatBubble').style.display = 'none';
         }
 
         async function loadResidents() {
@@ -1637,6 +1904,353 @@
                 alert('Delete failed: ' + error.message);
             }
         };
+
+        // ==========================================
+        // SETTINGS SECTION LOGIC
+        // ==========================================
+        async function loadSettings() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) return;
+
+            const { data: profile } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            // Populate profile form
+            document.getElementById('settingsFullName').value = profile?.full_name || '';
+            document.getElementById('settingsPhone').value = profile?.phone || '';
+            document.getElementById('settingsEmail').value = user.email || '';
+            document.getElementById('settingsPurok').value = profile?.purok || '';
+
+            // Load avatar
+            const avatarUrl = profile?.avatar_url;
+            const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'A')}&background=0f4c81&color=fff&size=100`;
+            document.getElementById('adminAvatarPreview').src = avatarUrl || fallback;
+            document.getElementById('sidebarAvatar').src = avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'Admin')}&background=ffc107&color=fff`;
+
+            // Account info
+            document.getElementById('settingsRole').textContent = (profile?.role || 'resident').charAt(0).toUpperCase() + (profile?.role || 'resident').slice(1);
+            document.getElementById('settingsUserId').textContent = user.id;
+            document.getElementById('settingsCreatedAt').textContent = user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
+            document.getElementById('settingsLastSignIn').textContent = user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+
+            // Load saved preferences
+            const prefs = JSON.parse(localStorage.getItem('admin_prefs') || '{}');
+            document.getElementById('settingsNotifToggle').checked = prefs.notifications !== false;
+            document.getElementById('settingsSoundToggle').checked = prefs.sound === true;
+            document.getElementById('settingsRememberSection').checked = prefs.rememberSection !== false;
+        }
+
+        // Avatar Upload Handler
+        document.getElementById('adminAvatarUpload').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) { document.getElementById('avatarUploadStatus').innerHTML = '<span class="text-danger">Max file size is 2MB</span>'; return; }
+
+            const status = document.getElementById('avatarUploadStatus');
+            status.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Uploading...';
+
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            const fileExt = file.name.split('.').pop();
+            const filePath = `${user.id}/avatar.${fileExt}`;
+
+            // Upload to Supabase Storage
+            const { error: uploadError } = await supabaseClient.storage
+                .from('avatars')
+                .upload(filePath, file, { upsert: true });
+
+            if (uploadError) {
+                status.innerHTML = `<span class="text-danger"><i class="fa-solid fa-xmark me-1"></i>${uploadError.message}</span>`;
+                return;
+            }
+
+            // Get public URL
+            const { data: urlData } = supabaseClient.storage.from('avatars').getPublicUrl(filePath);
+            const publicUrl = urlData.publicUrl + '?t=' + Date.now();
+
+            // Save to profile
+            await supabaseClient.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
+
+            // Update UI
+            document.getElementById('adminAvatarPreview').src = publicUrl;
+            document.getElementById('sidebarAvatar').src = publicUrl;
+            localStorage.removeItem('user_profile');
+            status.innerHTML = '<span class="text-success"><i class="fa-solid fa-check me-1"></i>Photo updated!</span>';
+            setTimeout(() => status.innerHTML = '', 3000);
+        });
+
+        // Change Password
+        document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const alertBox = document.getElementById('passwordAlert');
+            const newPass = document.getElementById('settingsNewPassword').value;
+            const confirmPass = document.getElementById('settingsConfirmPassword').value;
+
+            if (newPass !== confirmPass) {
+                alertBox.className = 'alert alert-danger';
+                alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark me-2"></i>Passwords do not match.';
+                alertBox.classList.remove('d-none');
+                return;
+            }
+
+            if (newPass.length < 6) {
+                alertBox.className = 'alert alert-danger';
+                alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark me-2"></i>Password must be at least 6 characters.';
+                alertBox.classList.remove('d-none');
+                return;
+            }
+
+            const btn = this.querySelector('button');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+
+            const { error } = await supabaseClient.auth.updateUser({ password: newPass });
+
+            if (error) {
+                alertBox.className = 'alert alert-danger';
+                alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark me-2"></i>' + error.message;
+            } else {
+                alertBox.className = 'alert alert-success';
+                alertBox.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>Password updated successfully!';
+                this.reset();
+            }
+            alertBox.classList.remove('d-none');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-shield-halved me-2"></i>Update Password';
+
+            setTimeout(() => alertBox.classList.add('d-none'), 4000);
+        });
+
+        // Update Profile
+        document.getElementById('updateProfileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const alertBox = document.getElementById('profileAlert');
+            const btn = this.querySelector('button');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
+            const { data: { user } } = await supabaseClient.auth.getUser();
+
+            const { error } = await supabaseClient
+                .from('profiles')
+                .update({
+                    full_name: document.getElementById('settingsFullName').value,
+                    phone: document.getElementById('settingsPhone').value || null,
+                    purok: document.getElementById('settingsPurok').value || null
+                })
+                .eq('id', user.id);
+
+            if (error) {
+                alertBox.className = 'alert alert-danger';
+                alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark me-2"></i>' + error.message;
+            } else {
+                alertBox.className = 'alert alert-success';
+                alertBox.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>Profile updated successfully!';
+                // Update sidebar name
+                const newName = document.getElementById('settingsFullName').value;
+                document.getElementById('adminName').textContent = newName.split(' ')[0];
+                localStorage.removeItem('user_profile');
+            }
+            alertBox.classList.remove('d-none');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i>Save Profile';
+
+            setTimeout(() => alertBox.classList.add('d-none'), 4000);
+        });
+
+        // Save preferences on toggle change
+        document.querySelectorAll('#settingsNotifToggle, #settingsSoundToggle, #settingsRememberSection').forEach(toggle => {
+            toggle.addEventListener('change', () => {
+                const prefs = {
+                    notifications: document.getElementById('settingsNotifToggle').checked,
+                    sound: document.getElementById('settingsSoundToggle').checked,
+                    rememberSection: document.getElementById('settingsRememberSection').checked
+                };
+                localStorage.setItem('admin_prefs', JSON.stringify(prefs));
+            });
+        });
+
+        // --- Live Chat System ---
+        let currentChatUserId = null;
+        let chatSubscription = null;
+
+        async function loadAdminChat() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) return;
+
+            // Load all conversations (unique users who sent messages)
+            const { data: convos } = await supabaseClient
+                .from('messages')
+                .select('sender_id, sender_name, sender_avatar, content, created_at')
+                .neq('sender_id', user.id)
+                .order('created_at', { ascending: false });
+
+            // Group by sender
+            const userMap = {};
+            (convos || []).forEach(m => {
+                if (!userMap[m.sender_id]) {
+                    userMap[m.sender_id] = {
+                        id: m.sender_id,
+                        name: m.sender_name || 'Resident',
+                        avatar: m.sender_avatar,
+                        lastMessage: m.content,
+                        lastTime: m.created_at
+                    };
+                }
+            });
+
+            const list = document.getElementById('chatConvoList');
+            const users = Object.values(userMap);
+            if (users.length === 0) {
+                list.innerHTML = '<div class="p-4 text-center text-muted"><i class="fa-solid fa-comments fs-1 opacity-25 mb-2"></i><p class="small mb-0">No conversations yet</p></div>';
+                return;
+            }
+
+            list.innerHTML = users.map(u => `
+                <div id="convo-${u.id}" class="p-3 border-bottom d-flex align-items-center chat-convo-item" style="cursor:pointer;" onclick="openConversation('${u.id}', '${(u.name || '').replace(/'/g, "\\'")}', '${u.avatar || ''}')">
+                    <img src="${u.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.name) + '&background=0f4c81&color=fff&size=40'}" class="rounded-circle me-3" width="40" height="40" style="object-fit:cover;">
+                    <div class="flex-grow-1 min-width-0">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="mb-0 fw-semibold small text-truncate">${u.name}</h6>
+                            <small class="text-muted" style="font-size:10px;">${new Date(u.lastTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
+                        </div>
+                        <p class="mb-0 text-muted text-truncate" style="font-size:12px;">${u.lastMessage || ''}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            // Subscribe to new messages globally
+            if (!chatSubscription) {
+                chatSubscription = supabaseClient.channel('admin-chat-global')
+                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+                        const msg = payload.new;
+                        if (msg.sender_id !== user.id) {
+                            // Refresh convo list
+                            loadAdminChat();
+                            // If this convo is open, add message
+                            if (msg.sender_id === currentChatUserId || msg.receiver_id === currentChatUserId) {
+                                appendChatMessage(msg, user.id);
+                            }
+
+                            App.playNotificationSound('admin');
+
+                            // If chat window is minimized or closed, increment badge
+                            const chatSec = document.getElementById('chatSection');
+                            if (chatSec.style.display === 'none') {
+                                const bubble = document.getElementById('adminChatBubble');
+                                const badge = document.getElementById('adminChatBubbleBadge');
+                                bubble.style.display = 'flex';
+                                const count = parseInt(badge.textContent) || 0;
+                                badge.textContent = count + 1;
+                                badge.style.display = 'block';
+                            }
+                        }
+                    })
+                    .subscribe();
+            }
+        }
+
+        async function openConversation(userId, name, avatar) {
+            currentChatUserId = userId;
+            const { data: { user } } = await supabaseClient.auth.getUser();
+
+            // Show header and input
+            document.getElementById('chatAreaHeader').style.display = 'flex';
+            document.getElementById('chatAreaHeader').style.cssText = 'display:flex !important;';
+            document.getElementById('adminChatInputArea').style.display = 'block';
+            document.getElementById('chatUserName').textContent = name;
+            document.getElementById('chatUserAvatar').src = avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0f4c81&color=fff&size=40`;
+
+            // Highlight active convo
+            document.querySelectorAll('.chat-convo-item').forEach(el => el.classList.remove('bg-primary', 'bg-opacity-10'));
+            const activeItem = document.getElementById(`convo-${userId}`);
+            if (activeItem) activeItem.classList.add('bg-primary', 'bg-opacity-10');
+
+            // Load messages between admin and this user
+            const { data: msgs } = await supabaseClient
+                .from('messages')
+                .select('*')
+                .or(`and(sender_id.eq.${userId},receiver_id.eq.${user.id}),and(sender_id.eq.${user.id},receiver_id.eq.${userId})`)
+                .order('created_at', { ascending: true });
+
+            const container = document.getElementById('adminChatMessages');
+            container.innerHTML = '';
+            (msgs || []).forEach(m => appendChatMessage(m, user.id));
+            container.scrollTop = container.scrollHeight;
+
+            // Setup Emoji Picker
+            const emojiBtn = document.getElementById('adminEmojiBtn');
+            const emojiContainer = document.getElementById('adminEmojiPickerContainer');
+            const picker = document.querySelector('emoji-picker');
+            const input = document.getElementById('adminChatInput');
+
+            emojiBtn.onclick = () => {
+                emojiContainer.style.display = emojiContainer.style.display === 'none' ? 'block' : 'none';
+            };
+
+            picker.addEventListener('emoji-click', event => {
+                input.value += event.detail.unicode;
+                input.focus();
+                // Don't auto-close picker to allow multiple emojis
+            });
+
+            // Close emoji picker when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!emojiBtn.contains(e.target) && !emojiContainer.contains(e.target)) {
+                    emojiContainer.style.display = 'none';
+                }
+            });
+
+            // Setup send form
+            const form = document.getElementById('adminChatForm');
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                const input = document.getElementById('adminChatInput');
+                const text = input.value.trim();
+                if (!text) return;
+
+                const { data: profile } = await supabaseClient.from('profiles').select('full_name, avatar_url').eq('id', user.id).single();
+
+                // 1. Show message instantly in the UI
+                const tempMsg = {
+                    sender_id: user.id,
+                    receiver_id: userId,
+                    content: text,
+                    created_at: new Date().toISOString()
+                };
+                appendChatMessage(tempMsg, user.id);
+                
+                // 2. Clear input
+                input.value = '';
+
+                // 3. Send to database
+                await supabaseClient.from('messages').insert({
+                    sender_id: user.id,
+                    receiver_id: userId,
+                    sender_name: profile?.full_name || 'Admin',
+                    sender_avatar: profile?.avatar_url || null,
+                    content: text,
+                    sender_role: 'admin'
+                });
+            };
+        }
+
+        function appendChatMessage(msg, myId) {
+            const container = document.getElementById('adminChatMessages');
+            const isMine = msg.sender_id === myId;
+            const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const html = `
+                <div class="d-flex mb-2 ${isMine ? 'justify-content-end' : 'justify-content-start'}">
+                    <div class="px-3 py-2 rounded-4 shadow-sm" style="max-width:70%;${isMine ? 'background:#0f4c81;color:#fff;border-bottom-right-radius:5px;' : 'background:#fff;border-bottom-left-radius:5px;'}">
+                        <div style="font-size:13px;">${msg.content}</div>
+                        <div style="font-size:10px;opacity:0.7;text-align:right;margin-top:2px;">${time}</div>
+                    </div>
+                </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+            container.scrollTop = container.scrollHeight;
+        }
     </script>
     <!-- Interactive Document Editor Modal -->
     <div class="modal fade" id="prepareDocumentModal" tabindex="-1" aria-hidden="true">

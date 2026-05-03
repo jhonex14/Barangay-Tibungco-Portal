@@ -157,3 +157,27 @@ body {
     pointer-events: none;
     z-index: -1;
 }
+
+/* Toast Notification Animations */
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideOutRight {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+}
+
+/* Bell Shake Animation */
+@keyframes bellShake {
+    0% { transform: rotate(0); }
+    15% { transform: rotate(14deg); }
+    30% { transform: rotate(-14deg); }
+    45% { transform: rotate(10deg); }
+    60% { transform: rotate(-10deg); }
+    75% { transform: rotate(4deg); }
+    100% { transform: rotate(0); }
+}
+.animate__animated.animate__swing {
+    animation: bellShake 0.8s ease-in-out;
+}
