@@ -142,14 +142,133 @@
         }
 
         .thumb-box {
-            border: 1px solid #000;
-            width: 120px;
-            height: 120px;
+            width: 100px;
+            height: 100px;
+            border: 2px dashed #ccc;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 10px;
             text-align: center;
+        }
+        .admin-msg-seen {
+            font-size: 10px;
+            color: rgba(255,255,255,0.65);
+            text-align: right;
+            margin-top: 2px;
+        }
+
+        /* Reply & Reaction Styles */
+        .msg-actions {
+            display: none;
+            position: absolute;
+            top: -20px;
+            gap: 8px;
+            z-index: 1000;
+            padding: 5px;
+        }
+        .justify-content-end .msg-actions { right: 10px; }
+        .justify-content-start .msg-actions { left: 10px; }
+        .d-flex.mb-2:hover .msg-actions, .msg-actions.active { display: flex; }
+        
+        .action-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #6c757d;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .action-btn:hover { background: #0f4c81; color: #fff; transform: scale(1.1); }
+
+        .reaction-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            margin-top: 4px;
+        }
+        .reaction-badge {
+            background: rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 10px;
+            padding: 1px 6px;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            transition: all 0.2s;
+        }
+        .reaction-badge:hover { background: rgba(0,0,0,0.1); }
+        .reaction-badge.active { background: #e7f3ff; border-color: #0084ff; }
+        .bg-primary .reaction-badge { background: rgba(255,255,255,0.15); border-color: transparent; color: #fff; }
+
+        .emoji-popover {
+            display: none;
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            padding: 5px 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            white-space: nowrap;
+        }
+        .emoji-popover span {
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0 4px;
+            transition: transform 0.2s;
+            display: inline-block;
+        }
+        .emoji-popover span:hover { transform: scale(1.3); }
+
+        .reply-preview-bar {
+            display: none;
+            background: #f8f9fa;
+            border-left: 4px solid #0f4c81;
+            padding: 8px 15px;
+            position: relative;
+            border-top: 1px solid #dee2e6;
+        }
+        .reply-preview-content {
+            font-size: 12px;
+            color: #495057;
+            white-space: nowrap;
+            overflow: hidden;
+            text-truncate: ellipsis;
+        }
+        .reply-close {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #6c757d;
+        }
+
+        .replied-message {
+            background: rgba(0,0,0,0.05);
+            border-left: 3px solid rgba(0,0,0,0.2);
+            padding: 4px 8px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            font-size: 11px;
+            opacity: 0.8;
+        }
+        .bg-primary .replied-message {
+            background: rgba(255,255,255,0.1);
+            border-left-color: rgba(255,255,255,0.3);
+            color: #fff;
         }
 
         /* --- Live Editor Styles --- */
@@ -777,7 +896,8 @@
                                 <small class="text-muted text-truncate d-block" id="chatUserEmail" style="font-size:10px;"></small>
                             </div>
                         </div>
-                        <div id="adminChatMessages" class="flex-grow-1 p-2" style="overflow-y: auto;">
+                        <!-- Messages Area -->
+                        <div id="adminChatMessages" class="flex-grow-1 p-3" style="overflow-y: auto; background: #f0f2f5;">
                             <div class="h-100 d-flex align-items-center justify-content-center text-center text-muted">
                                 <div>
                                     <i class="fa-solid fa-comment-dots fs-1 opacity-25 mb-2 d-block"></i>
@@ -786,6 +906,12 @@
                             </div>
                         </div>
                         <div id="adminChatInputArea" class="p-2 bg-white border-top position-relative" style="display:none;">
+                            <!-- Reply Preview Bar -->
+                            <div id="adminReplyPreview" class="reply-preview-bar">
+                                <div id="adminReplyContent" class="reply-preview-content"></div>
+                                <i class="fa-solid fa-xmark reply-close" onclick="cancelReply()"></i>
+                            </div>
+
                             <div id="adminEmojiPickerContainer" style="display:none; position:absolute; bottom: 100%; right: 10px; z-index: 1000; box-shadow: 0 5px 15px rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden;">
                                 <emoji-picker></emoji-picker>
                             </div>
@@ -1894,6 +2020,14 @@
                 .order('created_at', { ascending: false })
                 .limit(5);
 
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            const { data: recentMessages } = await supabaseClient
+                .from('messages')
+                .select('*')
+                .eq('receiver_id', user.id)
+                .order('created_at', { ascending: false })
+                .limit(5);
+
             const badge = document.getElementById('notifBadge');
             const complaintsBadge = document.getElementById('complaintsBadge');
             const requestsBadge = document.getElementById('statRequestsBadge'); // Ensure this element exists if used
@@ -1930,6 +2064,22 @@
                 });
             }
 
+            if (recentMessages) {
+                recentMessages.forEach(m => {
+                    let contentPreview = m.content ? (m.content.length > 20 ? m.content.substring(0, 20) + '...' : m.content) : '';
+                    allItems.push({
+                        ...m,
+                        type: 'message',
+                        icon: 'fa-comment-dots',
+                        color: 'text-primary',
+                        bgColor: 'bg-primary-soft',
+                        title: `New Message`,
+                        subtitle: `From ${escapeHtml(m.sender_name || 'Resident')}: ${escapeHtml(contentPreview)}`,
+                        onClick: `toggleAdminChat(); setTimeout(() => openConversation('${m.sender_id}', '${(m.sender_name || '').replace(/'/g, "\\'")}', ''), 300);`
+                    });
+                });
+            }
+
             // Sort by creation date
             allItems.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             allItems = allItems.slice(0, 5); // Keep only top 5
@@ -1943,12 +2093,29 @@
             // Calculate unread (Pending items)
             const unreadComplaints = (recentComplaints || []).filter(c => c.status === 'Pending').length;
             const unreadRequests = (recentRequests || []).filter(r => r.status === 'Pending').length;
-            const totalUnread = unreadComplaints + unreadRequests;
+            
+            const lastRead = parseInt(localStorage.getItem(`notif_read_${user.id}`)) || 0;
+            const unreadMessages = (recentMessages || []).filter(m => new Date(m.created_at).getTime() > lastRead).length;
+
+            const totalUnread = unreadComplaints + unreadRequests + unreadMessages;
 
             badge.textContent = totalUnread;
             badge.classList.toggle('d-none', totalUnread === 0);
             
             if (complaintsBadge) complaintsBadge.textContent = unreadComplaints;
+
+            // Mark notifications as read when dropdown is opened
+            const notifBtn = document.querySelector('[data-bs-toggle="dropdown"] i.fa-bell').parentElement;
+            if (notifBtn) {
+                notifBtn.onclick = () => {
+                    if (allItems.length > 0) {
+                        localStorage.setItem(`notif_read_${user.id}`, new Date(allItems[0].created_at).getTime());
+                    }
+                    const newTotal = unreadComplaints + unreadRequests; // Messages are now read
+                    badge.textContent = newTotal;
+                    badge.classList.toggle('d-none', newTotal === 0);
+                };
+            }
 
             notifList.innerHTML = '';
             allItems.forEach(item => {
@@ -2586,6 +2753,143 @@
         // --- Live Chat System ---
         let currentChatUserId = null;
         let chatSubscription = null;
+        let adminSeenInterval = null;
+        let lastSentAdminMsgId = null;
+        let replyingToMsgId = null;
+
+        window.setReply = function(msgId, text, senderName) {
+            console.log("Admin: Setting reply to", msgId, text);
+            replyingToMsgId = msgId;
+            const bar = document.getElementById('adminReplyPreview');
+            const content = document.getElementById('adminReplyContent');
+            if (bar && content) {
+                content.innerHTML = `<strong>Replying to ${senderName}:</strong> ${text}`;
+                bar.style.display = 'block';
+                document.getElementById('adminChatInput').focus();
+            }
+        };
+
+        window.toggleReaction = async function(msgId, emoji) {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            const { data: msg } = await supabaseClient.from('messages').select('reactions').eq('id', msgId).single();
+            let reactions = msg.reactions || {};
+            
+            if (!reactions[emoji]) reactions[emoji] = [];
+            const index = reactions[emoji].indexOf(user.id);
+            
+            if (index > -1) {
+                reactions[emoji].splice(index, 1);
+                if (reactions[emoji].length === 0) delete reactions[emoji];
+            } else {
+                reactions[emoji].push(user.id);
+            }
+            
+            await supabaseClient.from('messages').update({ reactions }).eq('id', msgId);
+            
+            // UI Update: Find the message element
+            const container = document.getElementById('adminChatMessages');
+            const msgEl = container.querySelector(`[data-id="${msgId}"]`);
+            if (!msgEl) return;
+
+            let reactCont = msgEl.querySelector('.reaction-container');
+            if (!reactCont) {
+                reactCont = document.createElement('div');
+                reactCont.className = 'reaction-container';
+                msgEl.querySelector('.px-3').appendChild(reactCont);
+            }
+
+            reactCont.innerHTML = '';
+            for (const [emo, users] of Object.entries(reactions)) {
+                const active = users.includes(user.id) ? 'active' : '';
+                reactCont.insertAdjacentHTML('beforeend', `<div class="reaction-badge ${active}" onclick="toggleReaction('${msgId}', '${emo}')">${emo} <span>${users.length}</span></div>`);
+            }
+            if (Object.keys(reactions).length === 0) reactCont.remove();
+        };
+
+        window.showEmojiPopover = function(btn, msgId) {
+            const popover = btn.nextElementSibling;
+            const isVisible = popover.style.display === 'block';
+            
+            // Close all other popovers
+            document.querySelectorAll('.emoji-popover').forEach(p => p.style.display = 'none');
+            document.querySelectorAll('.msg-actions').forEach(a => a.classList.remove('active'));
+
+            if (!isVisible) {
+                popover.style.display = 'block';
+                btn.closest('.msg-actions').classList.add('active');
+            }
+
+            popover.onclick = (e) => {
+                if (e.target.tagName === 'SPAN') {
+                    toggleReaction(msgId, e.target.textContent);
+                    popover.style.display = 'none';
+                    btn.closest('.msg-actions').classList.remove('active');
+                }
+            };
+        };
+
+        function cancelReply() {
+            replyingToMsgId = null;
+            document.getElementById('adminReplyPreview').style.display = 'none';
+        }
+
+        function markAdminMessageSeen(msgId) {
+            const container = document.getElementById('adminChatMessages');
+            if (!container) return;
+            // Remove old seen labels
+            container.querySelectorAll('.admin-msg-seen').forEach(el => el.remove());
+            // Find message by data-id
+            const msgEl = container.querySelector(`[data-id="${msgId}"]`);
+            if (msgEl) {
+                const bubble = msgEl.querySelector('.px-3');
+                if (bubble) {
+                    const seen = document.createElement('div');
+                    seen.className = 'admin-msg-seen';
+                    seen.innerHTML = '✓✓ Seen';
+                    bubble.appendChild(seen);
+                }
+            } else {
+                // Fallback: add to last sent message
+                const allSent = container.querySelectorAll('.justify-content-end');
+                if (allSent.length > 0) {
+                    const last = allSent[allSent.length - 1].querySelector('.px-3');
+                    if (last) {
+                        const seen = document.createElement('div');
+                        seen.className = 'admin-msg-seen';
+                        seen.innerHTML = '✓✓ Seen';
+                        last.appendChild(seen);
+                    }
+                }
+            }
+        }
+
+        function startAdminSeenPolling(msgId) {
+            if (msgId) lastSentAdminMsgId = msgId;
+            if (adminSeenInterval) clearInterval(adminSeenInterval);
+            if (!lastSentAdminMsgId) return;
+
+            console.log("Admin: Polling for 'Seen' on msg:", lastSentAdminMsgId);
+            adminSeenInterval = setInterval(async () => {
+                if (!lastSentAdminMsgId) { clearInterval(adminSeenInterval); return; }
+                try {
+                    const { data: msg, error } = await supabaseClient
+                        .from('messages')
+                        .select('id, is_read, receiver_id')
+                        .eq('id', lastSentAdminMsgId)
+                        .maybeSingle();
+                    
+                    if (error) return;
+
+                    if (msg && msg.is_read) {
+                        console.log("Admin: Message " + msg.id + " has been READ by resident.");
+                        clearInterval(adminSeenInterval);
+                        adminSeenInterval = null;
+                        markAdminMessageSeen(msg.id);
+                        lastSentAdminMsgId = null;
+                    }
+                } catch (err) {}
+            }, 3000);
+        }
 
         async function loadAdminChat() {
             const { data: { user } } = await supabaseClient.auth.getUser();
@@ -2643,19 +2947,59 @@
                             // If this convo is open, add message
                             if (msg.sender_id === currentChatUserId || msg.receiver_id === currentChatUserId) {
                                 appendChatMessage(msg, user.id);
+                                // Mark as read since admin is looking at it
+                                (async () => {
+                                    console.log("Admin: Marking new resident msg as read:", msg.id);
+                                    const { error } = await supabaseClient.from('messages').update({ is_read: true }).eq('id', msg.id);
+                                    if (error) console.error("Admin: Error marking as read:", error);
+                                })();
                             }
 
-                            App.playNotificationSound('admin');
+                            if (typeof App !== 'undefined') {
+                                App.playNotificationSound('admin');
+                            }
+
+                            // Update main top nav notification bell
+                            const topBadge = document.getElementById('notifBadge');
+                            const topList = document.getElementById('notifList');
+                            if (topBadge) {
+                                const current = parseInt(topBadge.textContent) || 0;
+                                topBadge.textContent = current + 1;
+                                topBadge.classList.remove('d-none');
+                            }
+                            if (topList) {
+                                const emptyItem = topList.querySelector('li.text-center');
+                                if (emptyItem && emptyItem.textContent.includes('No new activity')) topList.innerHTML = '';
+                                
+                                let contentPreview = msg.content ? (msg.content.length > 20 ? msg.content.substring(0, 20) + '...' : msg.content) : '';
+                                const onClick = `toggleAdminChat(); setTimeout(() => openConversation('${msg.sender_id}', '${(msg.sender_name || '').replace(/'/g, "\\'")}'  , ''), 300);`;
+                                const newItem = `
+                                    <li class="border-bottom bg-light bg-opacity-50">
+                                        <a class="dropdown-item p-2 rounded-3 mb-1" href="#" onclick="${onClick}">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-primary-soft text-primary p-2 rounded-circle me-3"><i class="fa-solid fa-comment-dots"></i></div>
+                                                <div>
+                                                    <div class="fw-bold small">New Message</div>
+                                                    <div class="text-muted" style="font-size: 11px;">From ${escapeHtml(msg.sender_name || 'Resident')}: ${escapeHtml(contentPreview)} • Just now</div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </li>
+                                `;
+                                topList.insertAdjacentHTML('afterbegin', newItem);
+                            }
 
                             // If chat window is minimized or closed, increment badge
                             const chatSec = document.getElementById('chatSection');
-                            if (chatSec.style.display === 'none') {
+                            if (chatSec && chatSec.style.display === 'none') {
                                 const bubble = document.getElementById('adminChatBubble');
                                 const badge = document.getElementById('adminChatBubbleBadge');
-                                bubble.style.display = 'flex';
-                                const count = parseInt(badge.textContent) || 0;
-                                badge.textContent = count + 1;
-                                badge.style.display = 'block';
+                                if (bubble) bubble.style.display = 'flex';
+                                if (badge) {
+                                    const count = parseInt(badge.textContent) || 0;
+                                    badge.textContent = count + 1;
+                                    badge.style.display = 'block';
+                                }
                             }
                         }
                     })
@@ -2693,6 +3037,23 @@
             container.innerHTML = '';
             (msgs || []).forEach(m => appendChatMessage(m, user.id));
             container.scrollTop = container.scrollHeight;
+
+            // Start polling for the last sent admin message in this convo
+            const lastAdminMsg = (msgs || []).filter(m => m.sender_id === user.id).pop();
+            if (lastAdminMsg && !lastAdminMsg.is_read) {
+                startAdminSeenPolling(lastAdminMsg.id);
+            } else if (adminSeenInterval) {
+                clearInterval(adminSeenInterval);
+                adminSeenInterval = null;
+            }
+
+            // Mark unread resident messages as read
+            const unreadIds = (msgs || []).filter(m => m.sender_id === userId && !m.is_read).map(m => m.id);
+            if (unreadIds.length > 0) {
+                console.log("Admin: Marking resident messages as read:", unreadIds);
+                const { error } = await supabaseClient.from('messages').update({ is_read: true }).in('id', unreadIds);
+                if (error) console.error("Admin: Error marking as read:", error);
+            }
 
             // Setup Emoji Picker
             const emojiBtn = document.getElementById('adminEmojiBtn');
@@ -2732,22 +3093,43 @@
                     sender_id: user.id,
                     receiver_id: userId,
                     content: text,
-                    created_at: new Date().toISOString()
+                    created_at: new Date().toISOString(),
+                    reply_to_id: replyingToMsgId
                 };
                 appendChatMessage(tempMsg, user.id);
                 
-                // 2. Clear input
+                // 2. Clear input and reply preview
                 input.value = '';
+                const savedReplyId = replyingToMsgId;
+                cancelReply();
 
                 // 3. Send to database
-                await supabaseClient.from('messages').insert({
+                const { data: inserted, error } = await supabaseClient.from('messages').insert({
                     sender_id: user.id,
                     receiver_id: userId,
                     sender_name: profile?.full_name || 'Admin',
                     sender_avatar: profile?.avatar_url || null,
                     content: text,
-                    sender_role: 'admin'
-                });
+                    sender_role: 'admin',
+                    reply_to_id: savedReplyId
+                }).select('id').single();
+
+                if (error) console.error("Admin: Send error:", error);
+
+                // Clear reply
+                cancelReply();
+
+                if (inserted?.id) {
+                    console.log("Admin: Message sent, ID:", inserted.id);
+                    lastSentAdminMsgId = inserted.id;
+                    // Assign ID to the last sent message element
+                    const container = document.getElementById('adminChatMessages');
+                    const allSent = container.querySelectorAll('.justify-content-end');
+                    if (allSent.length > 0) {
+                        allSent[allSent.length - 1].setAttribute('data-id', inserted.id);
+                    }
+                    startAdminSeenPolling();
+                }
             };
         }
 
@@ -2755,11 +3137,61 @@
             const container = document.getElementById('adminChatMessages');
             const isMine = msg.sender_id === myId;
             const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const msgIdAttr = msg.id ? `data-id="${msg.id}"` : '';
+            const seenHtml = (isMine && msg.is_read)
+                ? `<div class="admin-msg-seen">✓✓ Seen</div>`
+                : '';
+
+            // Remove seen from previous messages if this one is seen
+            if (isMine && msg.is_read) {
+                container.querySelectorAll('.admin-msg-seen').forEach(el => el.remove());
+            }
+
+            // Handle Reply Preview inside message
+            let replyToHtml = '';
+            if (msg.reply_to_id) {
+                const originalMsg = container.querySelector(`[data-id="${msg.reply_to_id}"]`);
+                const previewText = originalMsg ? originalMsg.querySelector('div[style*="font-size:13px"]').textContent : "Original message";
+                replyToHtml = `<div class="replied-message text-truncate">
+                    <i class="fa-solid fa-reply fa-flip-horizontal me-1"></i>${previewText}
+                </div>`;
+            }
+
+            // Handle Reactions
+            let reactionsHtml = '';
+            const reactions = msg.reactions || {};
+            if (Object.keys(reactions).length > 0) {
+                reactionsHtml = `<div class="reaction-container">`;
+                for (const [emoji, users] of Object.entries(reactions)) {
+                    const active = users.includes(myId) ? 'active' : '';
+                    reactionsHtml += `<div class="reaction-badge ${active}" onclick="toggleReaction('${msg.id}', '${emoji}')">${emoji} <span>${users.length}</span></div>`;
+                }
+                reactionsHtml += `</div>`;
+            }
+
             const html = `
-                <div class="d-flex mb-2 ${isMine ? 'justify-content-end' : 'justify-content-start'}">
-                    <div class="px-3 py-2 rounded-4 shadow-sm" style="max-width:70%;${isMine ? 'background:#0f4c81;color:#fff;border-bottom-right-radius:5px;' : 'background:#fff;border-bottom-left-radius:5px;'}">
-                        <div style="font-size:13px;">${msg.content}</div>
+                <div class="d-flex mb-2 ${isMine ? 'justify-content-end' : 'justify-content-start'}" ${msgIdAttr} style="position:relative; margin-top:15px;">
+                    <!-- Action Buttons on Hover -->
+                    <div class="msg-actions">
+                        <button class="action-btn" onclick="event.stopPropagation(); window.setReply('${msg.id}', this.closest('.d-flex').querySelector('.msg-content').textContent.trim(), '${(msg.sender_name || 'Resident').replace(/'/g, "\\'")}')">
+                            <i class="fa-solid fa-reply fa-flip-horizontal"></i>
+                        </button>
+                        <div style="position:relative; display:inline-block;">
+                            <button class="action-btn" onclick="event.stopPropagation(); window.showEmojiPopover(this, '${msg.id}')">
+                                <i class="fa-regular fa-face-smile"></i>
+                            </button>
+                            <div class="emoji-popover">
+                                <span>❤️</span><span>👍</span><span>😂</span><span>😮</span><span>😢</span><span>🔥</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="px-3 py-2 rounded-4 shadow-sm" style="max-width:75%;${isMine ? 'background:#0f4c81;color:#fff;border-bottom-right-radius:5px;' : 'background:#fff;border-bottom-left-radius:5px;'}">
+                        ${replyToHtml}
+                        <div class="msg-content" style="font-size:13px;">${msg.content}</div>
                         <div style="font-size:10px;opacity:0.7;text-align:right;margin-top:2px;">${time}</div>
+                        ${seenHtml}
+                        ${reactionsHtml}
                     </div>
                 </div>`;
             container.insertAdjacentHTML('beforeend', html);

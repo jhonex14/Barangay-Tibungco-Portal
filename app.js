@@ -275,9 +275,12 @@ const App = {
 
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if (ctx.state === 'suspended') {
+                ctx.resume();
+            }
 
             if (type === 'admin') {
-                // Admin: authoritative two-tone chime (lower pitch)
+                // Admin: authoritative two-tone chime
                 const playTone = (freq, start, dur) => {
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
@@ -295,7 +298,7 @@ const App = {
                 playTone(880, 0.15, 0.3);     // A5
                 playTone(1174.66, 0.3, 0.4);  // D6
             } else {
-                // Resident: gentle soft bell
+                // Resident: Bright, loud ping!
                 const playTone = (freq, start, dur) => {
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
@@ -304,19 +307,19 @@ const App = {
                     osc.type = 'sine';
                     osc.frequency.value = freq;
                     gain.gain.setValueAtTime(0, ctx.currentTime + start);
-                    gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + start + 0.05);
+                    gain.gain.linearRampToValueAtTime(0.6, ctx.currentTime + start + 0.02); // Much louder (0.6) and faster attack
                     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
                     osc.start(ctx.currentTime + start);
                     osc.stop(ctx.currentTime + start + dur);
                 };
-                playTone(784, 0, 0.25);     // G5
-                playTone(1046.5, 0.2, 0.35); // C6
+                playTone(1046.5, 0, 0.3); // C6 - crisp and bright
+                playTone(1318.5, 0.1, 0.4); // E6 - higher pitch
             }
 
             // Clean up context after sounds finish
             setTimeout(() => ctx.close(), 2000);
         } catch (e) {
-            console.log('Audio not supported');
+            console.log('Audio not supported', e);
         }
     },
 
@@ -333,6 +336,7 @@ const App = {
             if (role === 'admin') {
                 const { data: reqs } = await supabaseClient.from('requests').select('*').eq('status', 'Pending').order('created_at', { ascending: false }).limit(5);
                 const { data: comps } = await supabaseClient.from('complaints').select('*').eq('status', 'Pending').order('created_at', { ascending: false }).limit(5);
+                const { data: msgs } = await supabaseClient.from('messages').select('*').eq('receiver_id', userId).order('created_at', { ascending: false }).limit(5);
 
                 (reqs || []).forEach(r => {
                     allNotifs.push({
@@ -357,10 +361,24 @@ const App = {
                         link: 'dashboard.html'
                     });
                 });
+
+                (msgs || []).forEach(m => {
+                    let contentPreview = m.content ? (m.content.length > 30 ? m.content.substring(0, 30) + '...' : m.content) : '';
+                    allNotifs.push({
+                        title: 'New Message',
+                        text: `<strong>${escapeHtml(m.sender_name || 'Someone')}</strong>: ${escapeHtml(contentPreview)}`,
+                        time: new Date(m.created_at),
+                        timestamp: new Date(m.created_at).getTime(),
+                        icon: 'fa-comment-dots',
+                        color: 'text-primary',
+                        link: 'dashboard.html'
+                    });
+                });
             } else {
                 // Fetch recent requests to check for status updates or remarks
                 const { data: reqs } = await supabaseClient.from('requests').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(10);
                 const { data: comps } = await supabaseClient.from('complaints').select('*').eq('user_id', userId).neq('status', 'Pending').order('created_at', { ascending: false }).limit(5);
+                const { data: msgs } = await supabaseClient.from('messages').select('*').eq('receiver_id', userId).order('created_at', { ascending: false }).limit(5);
 
                 (reqs || []).forEach(r => {
                     // Only notify if status changed from Pending or if there's a note
@@ -400,6 +418,20 @@ const App = {
                         link: 'resident-dashboard.html'
                     });
                 });
+
+                (msgs || []).forEach(m => {
+                    let contentPreview = m.content ? (m.content.length > 30 ? m.content.substring(0, 30) + '...' : m.content) : '';
+                    allNotifs.push({
+                        title: 'New Message',
+                        text: `<strong>${escapeHtml(m.sender_name || 'Someone')}</strong>: ${escapeHtml(contentPreview)}`,
+                        time: new Date(m.created_at),
+                        timestamp: new Date(m.created_at).getTime(),
+                        icon: 'fa-comment-dots',
+                        color: 'text-primary',
+                        link: '#',
+                        onclick: "document.getElementById('brgy-chatbot-btn')?.click()"
+                    });
+                });
             }
 
             allNotifs.sort((a, b) => b.timestamp - a.timestamp);
@@ -421,7 +453,7 @@ const App = {
             if (displayNotifs.length > 0) {
                 list.innerHTML = displayNotifs.map(n => `
                     <li class="p-0 border-bottom ${n.timestamp > lastRead ? 'bg-light bg-opacity-50' : ''}">
-                        <a href="${n.link}" class="dropdown-item p-3 d-flex align-items-start text-wrap">
+                        <a href="${n.link}" class="dropdown-item p-3 d-flex align-items-start text-wrap" ${n.onclick ? `onclick="${n.onclick}"` : ''}>
                             <div class="bg-white border rounded-circle p-2 me-3 shadow-sm" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
                                 <i class="fa-solid ${n.icon} ${n.color}"></i>
                             </div>
@@ -479,7 +511,14 @@ const App = {
 
             // Build notification item for the dropdown
             let title, text, icon, color, link;
-            if (role === 'admin') {
+            if (payload.table === 'messages') {
+                title = 'New Message';
+                let contentPreview = record.content ? (record.content.length > 30 ? record.content.substring(0, 30) + '...' : record.content) : '';
+                text = `<strong>${record.sender_name || 'Someone'}</strong>: ${contentPreview}`;
+                icon = 'fa-comment-dots';
+                color = 'text-primary';
+                link = role === 'admin' ? 'dashboard.html' : '#';
+            } else if (role === 'admin') {
                 if (payload.table === 'requests' || record.type) {
                     title = 'New Document Request';
                     text = `${record.user_name || 'Someone'} requested ${record.type || 'a document'}`;
@@ -512,7 +551,7 @@ const App = {
 
                 const newItem = `
                     <li class="p-0 border-bottom bg-light bg-opacity-50">
-                        <a href="${link}" class="dropdown-item p-3 d-flex align-items-start text-wrap">
+                        <a href="${link}" class="dropdown-item p-3 d-flex align-items-start text-wrap" ${payload.table === 'messages' && role !== 'admin' ? 'onclick="document.getElementById(\\\'brgy-chatbot-btn\\\')?.click()"' : ''}>
                             <div class="bg-white border rounded-circle p-2 me-3 shadow-sm" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
                                 <i class="fa-solid ${icon} ${color}"></i>
                             </div>
@@ -548,6 +587,9 @@ const App = {
             supabaseClient.channel('admin-complaints')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'complaints' }, handleNew)
                 .subscribe((status) => { console.log('Admin complaints channel:', status); });
+            supabaseClient.channel('admin-messages')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${userId}` }, handleNew)
+                .subscribe();
         } else {
             supabaseClient.channel('user-requests')
                 .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'requests', filter: `user_id=eq.${userId}` }, handleNew)
@@ -555,6 +597,9 @@ const App = {
             supabaseClient.channel('user-complaints')
                 .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'complaints', filter: `user_id=eq.${userId}` }, handleNew)
                 .subscribe((status) => { console.log('User complaints channel:', status); });
+            supabaseClient.channel('user-messages-notif')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${userId}` }, handleNew)
+                .subscribe();
         }
     },
 
@@ -571,7 +616,13 @@ const App = {
         const record = payload.new;
         let title, message, icon, color;
 
-        if (role === 'admin') {
+        if (payload.table === 'messages') {
+            title = 'New Message';
+            let contentPreview = record.content ? (record.content.length > 30 ? record.content.substring(0, 30) + '...' : record.content) : '';
+            message = `<strong>${record.sender_name || 'Someone'}</strong>: ${contentPreview}`;
+            icon = 'fa-comment-dots';
+            color = 'text-primary';
+        } else if (role === 'admin') {
             if (payload.table === 'requests') {
                 title = 'New Document Request';
                 message = `${record.user_name || 'Someone'} requested a ${record.type || 'document'}`;
