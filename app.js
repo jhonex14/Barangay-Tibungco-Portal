@@ -76,6 +76,21 @@ const App = {
         if (!navRight) return;
 
         if (user) {
+            // Check for concurrent login takeover
+            const localSessionId = localStorage.getItem('local_session_id');
+            const remoteSessionId = user.user_metadata?.active_session_id;
+
+            if (remoteSessionId && localSessionId && localSessionId !== remoteSessionId) {
+                // Another device logged in and took over!
+                console.warn("Session hijacked by another device! Forcing logout.");
+                await supabaseClient.auth.signOut();
+                localStorage.removeItem('local_session_id');
+                localStorage.removeItem('user_profile');
+                alert("You have been securely logged out because your account was accessed from another device or browser.");
+                window.location.href = 'login.html';
+                return;
+            }
+
             try {
                 const { data: profile, error } = await supabaseClient
                     .from('profiles')
@@ -96,6 +111,7 @@ const App = {
             }
         } else {
             localStorage.removeItem('user_profile');
+            localStorage.removeItem('local_session_id');
             navRight.innerHTML = `
                 <a href="login.html" class="btn btn-outline-light me-2">Login</a>
                 <a href="register.html" class="btn btn-warning fw-bold text-dark">Register</a>
@@ -606,9 +622,22 @@ const App = {
     },
 
     logout: async function() {
-        localStorage.removeItem('user_profile');
-        await supabaseClient.auth.signOut();
-        window.location.replace('index.html');
+        if (confirm('Are you sure you want to logout?')) {
+            try {
+                // Clear the active session id
+                await supabaseClient.auth.updateUser({
+                    data: { active_session_id: null }
+                });
+                await supabaseClient.auth.signOut();
+                localStorage.removeItem('user_profile');
+                localStorage.removeItem('local_session_id');
+                window.location.replace('login.html');
+            } catch (error) {
+                console.error("Logout error:", error);
+                await supabaseClient.auth.signOut();
+                window.location.replace('login.html');
+            }
+        }
     },
 
     promptPassword: function(onSuccessCallback, message = "Please enter your password to proceed.") {

@@ -141,7 +141,44 @@
                     throw error;
                 }
 
-                console.log("Login success! Fetching profile...");
+                console.log("Login success! Checking concurrent sessions...");
+
+                // Concurrent Login Check
+                const activeSessionId = data.user.user_metadata?.active_session_id;
+                const forceLogin = localStorage.getItem('force_login') === 'true';
+
+                if (activeSessionId && !forceLogin) {
+                    // Account is in use!
+                    await supabaseClient.auth.signOut(); // sign out immediately to block access
+                    
+                    alertBox.className = 'alert alert-danger';
+                    alertBox.innerHTML = `
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                        <strong>Account in use!</strong> This account is currently logged in on another device or browser.
+                        <hr class="my-2 border-danger opacity-25">
+                        <button type="button" class="btn btn-sm btn-outline-danger w-100 fw-bold" onclick="forceLoginAndKick()">
+                            <i class="fa-solid fa-right-from-bracket me-2"></i>Force Logout Other Device & Let Me In
+                        </button>
+                    `;
+                    alertBox.classList.remove('d-none');
+                    btn.innerHTML = originalBtnText;
+                    btn.disabled = false;
+                    
+                    // Expose global function to force login
+                    window.forceLoginAndKick = function() {
+                        localStorage.setItem('force_login', 'true');
+                        btn.click(); // trigger form submit again
+                    };
+                    return; // Stop login process
+                }
+
+                // If no active session, or we forced login: Register this new session
+                const newSessionId = Date.now().toString() + Math.random().toString(36).substring(2);
+                await supabaseClient.auth.updateUser({
+                    data: { active_session_id: newSessionId }
+                });
+                localStorage.setItem('local_session_id', newSessionId);
+                localStorage.removeItem('force_login'); // clean up
 
                 // Get role from profile
                 const { data: profile, error: profileError } = await supabaseClient
@@ -158,7 +195,7 @@
                 console.log("User role identified as:", role);
                 
                 alertBox.className = 'alert alert-success';
-                alertBox.textContent = 'Login successful! Redirecting...';
+                alertBox.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>Login successful! Redirecting...';
                 alertBox.classList.remove('d-none');
 
                 setTimeout(() => {
