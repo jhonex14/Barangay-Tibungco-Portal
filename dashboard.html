@@ -216,7 +216,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#" onclick="showSection('settings')" class="nav-link sidebar-link text-white text-opacity-75" data-section="settings">
+                    <a href="#" onclick="App.promptPassword(() => showSection('settings'), 'Please enter your Admin password to access settings.')" class="nav-link sidebar-link text-white text-opacity-75" data-section="settings">
                         <i class="fa-solid fa-gear me-2"></i> Settings
                     </a>
                 </li>
@@ -227,15 +227,23 @@
                     </a>
                 </li>
             </ul>
-            <hr class="border-secondary opacity-50 mt-auto mb-4">
-            <div class="dropdown">
-                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-                    <img src="https://ui-avatars.com/api/?name=Admin+User&background=ffc107&color=fff" alt="admin" width="32" height="32" class="rounded-circle me-2" id="sidebarAvatar" style="object-fit:cover;">
-                    <strong id="adminName">Admin</strong>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-dark text-small shadow border-0">
-                    <li><a class="dropdown-item text-danger" href="#" onclick="App.logout()">Sign out</a></li>
-                </ul>
+            <hr class="border-secondary opacity-50 mt-auto mb-3">
+            <div class="bg-white bg-opacity-10 p-3 rounded-4 mt-auto">
+                <div class="d-flex align-items-center mb-2">
+                    <img src="https://ui-avatars.com/api/?name=Admin+User&background=ffc107&color=fff" alt="admin" width="48" height="48" class="rounded-circle border border-2 border-white me-2 shadow-sm" id="sidebarAvatar" style="object-fit:cover;">
+                    <div class="overflow-hidden">
+                        <h6 class="mb-0 text-white fw-bold" id="adminName" style="font-size: 13px; line-height: 1.2; word-wrap: break-word;">Admin</h6>
+                        <span class="badge bg-warning text-dark mt-1 shadow-sm" style="font-size: 10px;"><i class="fa-solid fa-shield-halved me-1"></i>Administrator</span>
+                    </div>
+                </div>
+                <div class="small text-white text-opacity-75 mb-3" style="font-size: 11px; line-height: 1.5; word-wrap: break-word;">
+                    <div id="adminEmail" class="mb-1"><i class="fa-solid fa-envelope me-1"></i>loading...</div>
+                    <div id="adminPhone" class="d-none mb-1 text-truncate"><i class="fa-solid fa-phone me-1"></i><span></span></div>
+                    <div id="adminPurok" class="d-none text-truncate"><i class="fa-solid fa-location-dot me-1"></i><span></span></div>
+                </div>
+                <button class="btn btn-sm btn-outline-light w-100 fw-bold rounded-pill shadow-sm" onclick="App.logout()">
+                    <i class="fa-solid fa-arrow-right-from-bracket me-1"></i>Sign out
+                </button>
             </div>
         </aside>
 
@@ -398,6 +406,7 @@
                     <div class="card-header bg-white border-bottom-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0">Resident Directory</h5>
                         <div class="d-flex gap-2">
+                            <button onclick="App.promptPassword(openCreateResidentModal, 'Please enter your Admin password to create a new resident account.')" class="btn btn-sm btn-primary fw-bold rounded-pill px-3 d-flex align-items-center"><i class="fa-solid fa-user-plus me-1"></i>New Resident</button>
                             <div class="input-group input-group-sm" style="width: 250px;">
                                 <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
                                 <input type="text" class="form-control bg-light border-start-0" id="residentSearch" placeholder="Search by name or purok..." onkeyup="filterResidents()">
@@ -414,6 +423,7 @@
                                         <th>Demographics</th>
                                         <th>Contact Info</th>
                                         <th>Verification Status</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="residentsTableBody">
@@ -888,6 +898,209 @@
         </div>
     </div>
 
+    <!-- Edit Resident Modal -->
+    <div class="modal fade" id="editResidentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header bg-primary text-white border-0 py-3 px-4">
+                    <h5 class="modal-title fw-bold">
+                        <i class="fa-solid fa-user-pen me-2"></i>Edit Resident Profile
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div id="editResAlert" class="alert d-none"></div>
+                    <div class="row g-4">
+                        <div class="col-md-4 text-center">
+                            <!-- Avatar Upload -->
+                            <div class="position-relative d-inline-block mb-3">
+                                <img src="" id="editResAvatarPreview" alt="Avatar" class="rounded-circle shadow border border-3 border-light" style="width:120px;height:120px;object-fit:cover;">
+                                <label for="editResAvatarUpload" class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow" style="width:36px;height:36px;cursor:pointer;border:2px solid #fff;">
+                                    <i class="fa-solid fa-camera" style="font-size:14px;"></i>
+                                </label>
+                                <input type="file" id="editResAvatarUpload" accept="image/*" class="d-none">
+                            </div>
+                            <div id="editResAvatarStatus" class="small text-muted fw-semibold"></div>
+                            <p class="small text-muted mt-2">Click the camera icon to upload a new profile picture.</p>
+                        </div>
+                        <div class="col-md-8">
+                            <form id="editResidentForm">
+                                <input type="hidden" id="editResId">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small text-muted">Full Name</label>
+                                    <input type="text" class="form-control bg-light" id="editResName" required>
+                                </div>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small text-muted">Email Address</label>
+                                        <input type="email" class="form-control bg-light" id="editResEmail">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small text-muted">Phone Number</label>
+                                        <input type="tel" class="form-control bg-light" id="editResPhone">
+                                    </div>
+                                </div>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small text-muted">Age</label>
+                                        <input type="number" class="form-control bg-light" id="editResAge">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small text-muted">Civil Status</label>
+                                        <select class="form-select bg-light" id="editResCivilStatus">
+                                            <option value="Single">Single</option>
+                                            <option value="Married">Married</option>
+                                            <option value="Widow">Widow</option>
+                                            <option value="Widower">Widower</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <label class="form-label fw-semibold small text-muted">Complete Address</label>
+                                        <input type="text" class="form-control bg-light" id="editResAddress">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold small text-muted">Purok</label>
+                                        <select class="form-select bg-light" id="editResPurok">
+                                            <option value="Purok 1">Purok 1</option>
+                                            <option value="Purok 2">Purok 2</option>
+                                            <option value="Purok 3">Purok 3</option>
+                                            <option value="Purok 4">Purok 4</option>
+                                            <option value="Purok 5">Purok 5</option>
+                                            <option value="Purok 6">Purok 6</option>
+                                            <option value="Purok 7">Purok 7</option>
+                                            <option value="Purok 8">Purok 8</option>
+                                            <option value="Purok 9">Purok 9</option>
+                                            <option value="Purok 10">Purok 10</option>
+                                            <option value="Purok 11">Purok 11</option>
+                                            <option value="Purok 12">Purok 12</option>
+                                            <option value="Purok 13">Purok 13</option>
+                                            <option value="Purok 14">Purok 14</option>
+                                            <option value="Purok 15">Purok 15</option>
+                                            <option value="Purok 16">Purok 16</option>
+                                            <option value="Purok 17">Purok 17</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" id="saveResBtn" onclick="saveResidentUpdate()">
+                        <i class="fa-solid fa-floppy-disk me-2"></i>Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Resident Modal -->
+    <div class="modal fade" id="createResidentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header bg-primary text-white border-0 py-3 px-4">
+                    <h5 class="modal-title fw-bold">
+                        <i class="fa-solid fa-user-plus me-2"></i>Create New Resident
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div id="createResAlert" class="alert d-none"></div>
+                    <div class="row g-4">
+                        <div class="col-md-4 text-center">
+                            <!-- Avatar Upload -->
+                            <div class="position-relative d-inline-block mb-3">
+                                <img src="https://ui-avatars.com/api/?name=New+User&background=0f4c81&color=fff&size=120" id="createResAvatarPreview" alt="Avatar" class="rounded-circle shadow border border-3 border-light" style="width:120px;height:120px;object-fit:cover;">
+                                <label for="createResAvatarUpload" class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow" style="width:36px;height:36px;cursor:pointer;border:2px solid #fff;">
+                                    <i class="fa-solid fa-camera" style="font-size:14px;"></i>
+                                </label>
+                                <input type="file" id="createResAvatarUpload" accept="image/*" class="d-none">
+                            </div>
+                            <div id="createResAvatarStatus" class="small text-muted fw-semibold"></div>
+                            <p class="small text-muted mt-2">Upload a profile picture for the new resident.</p>
+                        </div>
+                        <div class="col-md-8">
+                            <form id="createResidentForm">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small text-muted">Full Name</label>
+                                    <input type="text" class="form-control bg-light" id="createResName" required>
+                                </div>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small text-muted">Email Address</label>
+                                        <input type="email" class="form-control bg-light" id="createResEmail" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small text-muted">Password</label>
+                                        <input type="password" class="form-control bg-light" id="createResPassword" required minlength="6">
+                                    </div>
+                                </div>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small text-muted">Phone Number</label>
+                                        <input type="tel" class="form-control bg-light" id="createResPhone">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small text-muted">Age</label>
+                                        <input type="number" class="form-control bg-light" id="createResAge">
+                                    </div>
+                                </div>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-12">
+                                        <label class="form-label fw-semibold small text-muted">Civil Status</label>
+                                        <select class="form-select bg-light" id="createResCivilStatus">
+                                            <option value="Single">Single</option>
+                                            <option value="Married">Married</option>
+                                            <option value="Widow">Widow</option>
+                                            <option value="Widower">Widower</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <label class="form-label fw-semibold small text-muted">Complete Address</label>
+                                        <input type="text" class="form-control bg-light" id="createResAddress">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold small text-muted">Purok</label>
+                                        <select class="form-select bg-light" id="createResPurok">
+                                            <option value="Purok 1">Purok 1</option>
+                                            <option value="Purok 2">Purok 2</option>
+                                            <option value="Purok 3">Purok 3</option>
+                                            <option value="Purok 4">Purok 4</option>
+                                            <option value="Purok 5">Purok 5</option>
+                                            <option value="Purok 6">Purok 6</option>
+                                            <option value="Purok 7">Purok 7</option>
+                                            <option value="Purok 8">Purok 8</option>
+                                            <option value="Purok 9">Purok 9</option>
+                                            <option value="Purok 10">Purok 10</option>
+                                            <option value="Purok 11">Purok 11</option>
+                                            <option value="Purok 12">Purok 12</option>
+                                            <option value="Purok 13">Purok 13</option>
+                                            <option value="Purok 14">Purok 14</option>
+                                            <option value="Purok 15">Purok 15</option>
+                                            <option value="Purok 16">Purok 16</option>
+                                            <option value="Purok 17">Purok 17</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" id="createResBtn" onclick="saveNewResident()">
+                        <i class="fa-solid fa-plus me-2"></i>Create Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- View Complaint Modal -->
     <div class="modal fade" id="complaintModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -1023,10 +1236,10 @@
                 return;
             }
 
-            // Get profile for name and role
+            // Get profile for name, role, and avatar
             const { data: profile } = await supabaseClient
                 .from('profiles')
-                .select('full_name, role')
+                .select('full_name, role, avatar_url, phone, purok')
                 .eq('id', user.id)
                 .single();
 
@@ -1035,7 +1248,32 @@
                 return;
             }
 
-            document.getElementById('adminName').textContent = profile.full_name.split(' ')[0];
+            document.getElementById('adminName').textContent = profile.full_name;
+            document.getElementById('adminName').title = profile.full_name; // tooltip for long names
+            const adminEmailEl = document.getElementById('adminEmail');
+            if (adminEmailEl) {
+                adminEmailEl.innerHTML = `<i class="fa-solid fa-envelope me-1"></i>${user.email}`;
+                adminEmailEl.title = user.email; // tooltip for long emails
+            }
+            const adminPhoneEl = document.getElementById('adminPhone');
+            if (adminPhoneEl && profile.phone) {
+                adminPhoneEl.innerHTML = `<i class="fa-solid fa-phone me-1"></i>${profile.phone}`;
+                adminPhoneEl.classList.remove('d-none');
+            }
+            const adminPurokEl = document.getElementById('adminPurok');
+            if (adminPurokEl && profile.purok) {
+                adminPurokEl.innerHTML = `<i class="fa-solid fa-location-dot me-1"></i>${profile.purok}`;
+                adminPurokEl.classList.remove('d-none');
+            }
+            
+            const sidebarAvatar = document.getElementById('sidebarAvatar');
+            if (sidebarAvatar) {
+                if (profile.avatar_url) {
+                    sidebarAvatar.src = profile.avatar_url;
+                } else {
+                    sidebarAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name)}&background=ffc107&color=fff`;
+                }
+            }
 
             // Restore last active section or default to overview
             const lastSection = localStorage.getItem('admin_last_section') || 'overview';
@@ -1314,10 +1552,227 @@
                         <div><i class="fa-solid fa-envelope me-1"></i>${escapeHtml(res.email || 'N/A')}</div>
                     </td>
                     <td><span class="badge bg-success-soft text-success rounded-pill px-3"><i class="fa-solid fa-circle-check me-1"></i>Verified</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-light text-primary border" onclick="openEditResidentModal('${res.id}')"><i class="fa-solid fa-pen me-1"></i>Edit</button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
+
+        window.openEditResidentModal = async function(id) {
+            const { data: res, error } = await supabaseClient.from('profiles').select('*').eq('id', id).single();
+            if (error || !res) return;
+
+            document.getElementById('editResId').value = res.id;
+            document.getElementById('editResName').value = res.full_name || '';
+            document.getElementById('editResEmail').value = res.email || '';
+            document.getElementById('editResPhone').value = res.phone || '';
+            document.getElementById('editResAge').value = res.age || '';
+            document.getElementById('editResCivilStatus').value = res.civil_status || '';
+            document.getElementById('editResAddress').value = res.address || '';
+            document.getElementById('editResPurok').value = res.purok || '';
+
+            const avatarPreview = document.getElementById('editResAvatarPreview');
+            if (res.avatar_url) {
+                avatarPreview.src = res.avatar_url;
+            } else {
+                avatarPreview.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(res.full_name || 'U')}&background=0f4c81&color=fff&size=80`;
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('editResidentModal'));
+            modal.show();
+        };
+
+        window.saveResidentUpdate = async function() {
+            const id = document.getElementById('editResId').value;
+            const btn = document.getElementById('saveResBtn');
+            const alertBox = document.getElementById('editResAlert');
+            const originalHtml = btn.innerHTML;
+            
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+            btn.disabled = true;
+
+            const updates = {
+                full_name: document.getElementById('editResName').value,
+                email: document.getElementById('editResEmail').value,
+                phone: document.getElementById('editResPhone').value,
+                age: document.getElementById('editResAge').value ? parseInt(document.getElementById('editResAge').value) : null,
+                civil_status: document.getElementById('editResCivilStatus').value,
+                address: document.getElementById('editResAddress').value,
+                purok: document.getElementById('editResPurok').value
+            };
+
+            const { error } = await supabaseClient.from('profiles').update(updates).eq('id', id);
+
+            if (error) {
+                alertBox.className = 'alert alert-danger p-2 small mt-3';
+                alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark me-1"></i>' + error.message;
+                alertBox.classList.remove('d-none');
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            } else {
+                bootstrap.Modal.getInstance(document.getElementById('editResidentModal')).hide();
+                loadResidents(); // Refresh the table
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        };
+
+        document.getElementById('editResAvatarUpload').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) { alert('Max file size is 2MB'); return; }
+
+            const status = document.getElementById('editResAvatarStatus');
+            const id = document.getElementById('editResId').value;
+            status.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Uploading...';
+
+            const fileExt = file.name.split('.').pop();
+            const filePath = `${id}/avatar.${fileExt}`;
+
+            const { error: uploadError } = await supabaseClient.storage.from('avatars').upload(filePath, file, { upsert: true });
+
+            if (uploadError) {
+                status.innerHTML = `<span class="text-danger"><i class="fa-solid fa-xmark me-1"></i>${uploadError.message}</span>`;
+                return;
+            }
+
+            const { data: urlData } = supabaseClient.storage.from('avatars').getPublicUrl(filePath);
+            const publicUrl = urlData.publicUrl + '?t=' + Date.now();
+
+            await supabaseClient.from('profiles').update({ avatar_url: publicUrl }).eq('id', id);
+
+            document.getElementById('editResAvatarPreview').src = publicUrl;
+            status.innerHTML = '<span class="text-success"><i class="fa-solid fa-check me-1"></i>Uploaded!</span>';
+            setTimeout(() => status.innerHTML = '', 3000);
+            loadResidents(); // Refresh table to show new avatar if it were in table
+        });
+
+        window.openCreateResidentModal = function() {
+            document.getElementById('createResidentForm').reset();
+            document.getElementById('createResAlert').classList.add('d-none');
+            document.getElementById('createResAvatarPreview').src = "https://ui-avatars.com/api/?name=New+User&background=0f4c81&color=fff&size=120";
+            document.getElementById('createResAvatarUpload').value = '';
+            document.getElementById('createResAvatarStatus').innerHTML = '';
+            const modal = new bootstrap.Modal(document.getElementById('createResidentModal'));
+            modal.show();
+        };
+
+        // Preview avatar selection before creating user
+        document.getElementById('createResAvatarUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('createResAvatarPreview').src = URL.createObjectURL(file);
+            }
+        });
+
+        window.saveNewResident = async function() {
+            const btn = document.getElementById('createResBtn');
+            const alertBox = document.getElementById('createResAlert');
+            const statusBox = document.getElementById('createResAvatarStatus');
+            const originalHtml = btn.innerHTML;
+            
+            const email = document.getElementById('createResEmail').value;
+            const password = document.getElementById('createResPassword').value;
+            const name = document.getElementById('createResName').value;
+            const phone = document.getElementById('createResPhone').value;
+            const age = document.getElementById('createResAge').value ? parseInt(document.getElementById('createResAge').value) : null;
+            const civilStatus = document.getElementById('createResCivilStatus').value;
+            const address = document.getElementById('createResAddress').value;
+            const purok = document.getElementById('createResPurok').value;
+            const avatarFile = document.getElementById('createResAvatarUpload').files[0];
+
+            if(!email || !password || !name) {
+                alertBox.className = 'alert alert-danger p-2 small mt-3';
+                alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark me-1"></i>Please fill in Name, Email, and Password.';
+                alertBox.classList.remove('d-none');
+                return;
+            }
+
+            if (avatarFile && avatarFile.size > 2 * 1024 * 1024) {
+                alertBox.className = 'alert alert-danger p-2 small mt-3';
+                alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark me-1"></i>Max avatar file size is 2MB.';
+                alertBox.classList.remove('d-none');
+                return;
+            }
+
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Creating...';
+            btn.disabled = true;
+
+            // Save admin session before signing up new user
+            const { data: { session: adminSession } } = await supabaseClient.auth.getSession();
+
+            const { data, error } = await supabaseClient.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    data: {
+                        full_name: name,
+                        role: 'resident',
+                        phone: phone,
+                        age: age,
+                        civil_status: civilStatus,
+                        address: address,
+                        purok: purok
+                    }
+                }
+            });
+
+            if (error) {
+                alertBox.className = 'alert alert-danger p-2 small mt-3';
+                alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark me-1"></i>' + error.message;
+                alertBox.classList.remove('d-none');
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                return;
+            }
+
+            const newUserId = data.user.id;
+            let finalAvatarUrl = null;
+
+            // Restore admin session immediately to prevent logout
+            if (adminSession) {
+                await supabaseClient.auth.setSession({
+                    access_token: adminSession.access_token,
+                    refresh_token: adminSession.refresh_token
+                });
+            }
+
+            // Upload Avatar if selected
+            if (avatarFile) {
+                statusBox.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Uploading photo...';
+                const fileExt = avatarFile.name.split('.').pop();
+                const filePath = `${newUserId}/avatar.${fileExt}`;
+                
+                const { error: uploadError } = await supabaseClient.storage.from('avatars').upload(filePath, avatarFile, { upsert: true });
+                
+                if (!uploadError) {
+                    const { data: urlData } = supabaseClient.storage.from('avatars').getPublicUrl(filePath);
+                    finalAvatarUrl = urlData.publicUrl + '?t=' + Date.now();
+                    statusBox.innerHTML = '<span class="text-success"><i class="fa-solid fa-check me-1"></i>Uploaded!</span>';
+                } else {
+                    statusBox.innerHTML = `<span class="text-danger small"><i class="fa-solid fa-xmark me-1"></i>${uploadError.message}</span>`;
+                }
+            }
+
+            // Ensure profile is fully populated with avatar URL
+            await supabaseClient.from('profiles').update({
+                full_name: name,
+                email: email,
+                phone: phone,
+                age: age,
+                civil_status: civilStatus,
+                address: address,
+                purok: purok,
+                ...(finalAvatarUrl && { avatar_url: finalAvatarUrl })
+            }).eq('id', newUserId);
+
+            bootstrap.Modal.getInstance(document.getElementById('createResidentModal')).hide();
+            loadResidents(); // Refresh the table
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        };
 
         window.filterResidents = function() {
             const query = document.getElementById('residentSearch').value.toLowerCase();
@@ -2105,7 +2560,8 @@
                 alertBox.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>Profile updated successfully!';
                 // Update sidebar name
                 const newName = document.getElementById('settingsFullName').value;
-                document.getElementById('adminName').textContent = newName.split(' ')[0];
+                document.getElementById('adminName').textContent = newName;
+                document.getElementById('adminName').title = newName;
                 localStorage.removeItem('user_profile');
             }
             alertBox.classList.remove('d-none');

@@ -79,7 +79,7 @@ const App = {
             try {
                 const { data: profile, error } = await supabaseClient
                     .from('profiles')
-                    .select('id, role, full_name, avatar_url')
+                    .select('id, role, full_name, avatar_url, phone, address, purok, age, civil_status')
                     .eq('id', user.id)
                     .single();
 
@@ -136,12 +136,12 @@ const App = {
                     </div>
                     <div class="dropdown">
                         <button class="btn btn-warning fw-bold dropdown-toggle rounded-pill px-3 shadow-sm d-flex align-items-center" type="button" data-bs-toggle="dropdown">
-                            <img src="${adminAvatar}" alt="avatar" width="24" height="24" class="rounded-circle me-1" style="object-fit:cover;"> ${safeFirstName}
+                            <img src="${adminAvatar}" alt="avatar" width="24" height="24" class="rounded-circle me-1" style="object-fit:cover;"> Admin ${safeFirstName}
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2">
-                            <li><a class="dropdown-item py-2" href="dashboard.html"><i class="fa-solid fa-chart-line me-2 text-muted"></i>Dashboard</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item py-2 text-danger" href="#" onclick="App.logout()"><i class="fa-solid fa-arrow-right-from-bracket me-2"></i>Logout</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark shadow-lg border-0 rounded-4 mt-2 p-2" style="min-width: 200px; animation: fadeIn 0.2s ease-in-out; background-color: #1a233a;">
+                            <li><a class="dropdown-item py-2 px-3 rounded-3 mb-1 d-flex align-items-center fw-medium transition-all text-white" href="dashboard.html" onmouseover="this.classList.add('bg-primary', 'bg-opacity-25')" onmouseout="this.classList.remove('bg-primary', 'bg-opacity-25')"><i class="fa-solid fa-chart-line me-3 fs-5 text-info opacity-75"></i>Dashboard</a></li>
+                            <li><hr class="dropdown-divider border-secondary opacity-25 my-1"></li>
+                            <li><a class="dropdown-item py-2 px-3 rounded-3 mt-1 d-flex align-items-center fw-medium transition-all text-danger" href="#" onclick="App.logout()" onmouseover="this.classList.add('bg-danger', 'text-white')" onmouseout="this.classList.remove('bg-danger', 'text-white')"><i class="fa-solid fa-arrow-right-from-bracket me-3 fs-5 opacity-75"></i>Logout</a></li>
                         </ul>
                     </div>
                 </div>
@@ -165,20 +165,79 @@ const App = {
                     </div>
                     <div class="dropdown">
                         <button class="btn btn-light rounded-pill px-3 dropdown-toggle text-primary fw-bold d-flex align-items-center" type="button" data-bs-toggle="dropdown">
-                            <img src="${residentAvatar}" alt="avatar" width="24" height="24" class="rounded-circle me-1" style="object-fit:cover;"> ${safeFirstName || 'Resident'}
+                            <img src="${residentAvatar}" alt="avatar" width="24" height="24" class="rounded-circle me-1" style="object-fit:cover;"> Resident ${safeFirstName}
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2">
-                            <li><a class="dropdown-item py-2" href="resident-dashboard.html"><i class="fa-solid fa-id-card me-2 text-muted"></i>My Profile</a></li>
-                            <li><a class="dropdown-item py-2" href="services.html"><i class="fa-solid fa-file-invoice me-2 text-muted"></i>Request Service</a></li>
-                            <li><a class="dropdown-item py-2" href="#" onclick="App.promptPasswordForSettings()"><i class="fa-solid fa-gear me-2 text-muted"></i>Settings</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item py-2 text-danger" href="#" onclick="App.logout()"><i class="fa-solid fa-arrow-right-from-bracket me-2"></i>Logout</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark shadow-lg border-0 rounded-4 mt-2 p-2" style="min-width: 200px; animation: fadeIn 0.2s ease-in-out; background-color: #1a233a;">
+                            <li><a class="dropdown-item py-2 px-3 rounded-3 mb-1 d-flex align-items-center fw-medium transition-all text-white" href="resident-dashboard.html" onmouseover="this.classList.add('bg-primary', 'bg-opacity-25')" onmouseout="this.classList.remove('bg-primary', 'bg-opacity-25')"><i class="fa-solid fa-id-card me-3 fs-5 text-info opacity-75"></i>My Profile</a></li>
+                            <li><a class="dropdown-item py-2 px-3 rounded-3 mb-1 d-flex align-items-center fw-medium transition-all text-white" href="services.html" onmouseover="this.classList.add('bg-primary', 'bg-opacity-25')" onmouseout="this.classList.remove('bg-primary', 'bg-opacity-25')"><i class="fa-solid fa-file-invoice me-3 fs-5 text-warning opacity-75"></i>Request Service</a></li>
+                            <li><a class="dropdown-item py-2 px-3 rounded-3 mb-1 d-flex align-items-center fw-medium transition-all text-white" href="#" onclick="App.promptPasswordForSettings()" onmouseover="this.classList.add('bg-primary', 'bg-opacity-25')" onmouseout="this.classList.remove('bg-primary', 'bg-opacity-25')"><i class="fa-solid fa-gear me-3 fs-5 text-secondary opacity-75"></i>Settings</a></li>
+                            <li><hr class="dropdown-divider border-secondary opacity-25 my-1"></li>
+                            <li><a class="dropdown-item py-2 px-3 rounded-3 mt-1 d-flex align-items-center fw-medium transition-all text-danger" href="#" onclick="App.logout()" onmouseover="this.classList.add('bg-danger', 'text-white')" onmouseout="this.classList.remove('bg-danger', 'text-white')"><i class="fa-solid fa-arrow-right-from-bracket me-3 fs-5 opacity-75"></i>Logout</a></li>
                         </ul>
                     </div>
                 </div>
             `;
         }
         navRight.style.opacity = "1";
+        
+        // Inject Profile Card into index.html hero section
+        const heroCardsContainer = document.getElementById('heroCardsContainer');
+        if (heroCardsContainer && profile) {
+            const dateStr = (user && user.created_at) ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : (profile.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A');
+            const badgeColor = role === 'admin' ? 'bg-warning text-dark' : 'bg-success text-white';
+            const displayEmail = profile.email || (user ? user.email : '') || '';
+            const avatarUrlForCard = role === 'admin' ? 
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(safeFirstName || 'A')}&background=ffc107&color=fff&size=60` : 
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(safeFirstName || 'R')}&background=0f4c81&color=fff&size=60`;
+            
+            // Check if it's already added to avoid duplicates on re-renders
+            if (!document.getElementById('injectedProfileWrapper')) {
+                heroCardsContainer.insertAdjacentHTML('afterbegin', `
+                    <div class="col-12" id="injectedProfileWrapper">
+                        <div id="injectedProfileCard" class="card border-0 shadow-lg rounded-4 w-100 overflow-hidden backdrop-blur text-white" style="animation: fadeIn 0.4s ease-in-out; background: rgba(255, 255, 255, 0.1);">
+                            <div class="text-center pt-4 pb-3 position-relative">
+                                <img src="${profile.avatar_url || avatarUrlForCard}" alt="Avatar" class="rounded-circle shadow-lg border border-3 border-white position-absolute start-50 translate-middle-x" style="width: 65px; height: 65px; object-fit: cover; bottom: -40px; background: white;">
+                            </div>
+                            <div class="card-body pt-5 pb-3 text-center px-3">
+                                <h6 class="fw-bold mb-1 text-white">${safeDisplayName}</h6>
+                                <p class="text-light opacity-75 mb-2" style="font-size: 12px;">${displayEmail}</p>
+                                <span class="badge ${badgeColor} text-uppercase px-2 py-1 rounded-pill shadow-sm mb-3" style="font-size: 10px;">${role === 'admin' ? 'Administrator' : 'Resident'}</span>
+                                
+                                <div class="text-start rounded-4 p-3 border shadow-sm" style="background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.1) !important;">
+                                    <div class="row g-2">
+                                        <div class="col-12 border-bottom pb-1 mt-1" style="border-color: rgba(255,255,255,0.1) !important;">
+                                            <span class="text-light opacity-75 d-block mb-1" style="font-size: 10px;"><i class="fa-solid fa-phone me-1 text-info"></i>Phone</span>
+                                            <span class="fw-semibold text-white" style="font-size: 12px;">${profile.phone || 'Not provided'}</span>
+                                        </div>
+                                        <div class="col-12 border-bottom pb-1 mt-1" style="border-color: rgba(255,255,255,0.1) !important;">
+                                            <span class="text-light opacity-75 d-block mb-1" style="font-size: 10px;"><i class="fa-solid fa-map me-1 text-success"></i>Address</span>
+                                            <span class="fw-semibold text-white" style="font-size: 12px;">${profile.address || 'Not provided'}</span>
+                                        </div>
+                                        <div class="col-6 border-bottom pb-1 mt-1" style="border-color: rgba(255,255,255,0.1) !important;">
+                                            <span class="text-light opacity-75 d-block mb-1" style="font-size: 10px;"><i class="fa-solid fa-location-dot me-1 text-danger"></i>Zone/Purok</span>
+                                            <span class="fw-semibold text-white" style="font-size: 12px;">${profile.purok || 'N/A'}</span>
+                                        </div>
+                                        <div class="col-6 border-bottom pb-1 mt-1" style="border-color: rgba(255,255,255,0.1) !important;">
+                                            <span class="text-light opacity-75 d-block mb-1" style="font-size: 10px;"><i class="fa-solid fa-calendar-days me-1 text-info"></i>Age</span>
+                                            <span class="fw-semibold text-white" style="font-size: 12px;">${profile.age || 'N/A'}</span>
+                                        </div>
+                                        <div class="col-6 pb-1 mt-1">
+                                            <span class="text-light opacity-75 d-block mb-1" style="font-size: 10px;"><i class="fa-solid fa-ring me-1 text-warning"></i>Civil Status</span>
+                                            <span class="fw-semibold text-white" style="font-size: 12px;">${profile.civil_status || 'N/A'}</span>
+                                        </div>
+                                        <div class="col-6 pb-1 mt-1">
+                                            <span class="text-light opacity-75 d-block mb-1" style="font-size: 10px;"><i class="fa-solid fa-calendar-day me-1 text-warning"></i>Member Since</span>
+                                            <span class="fw-semibold text-white" style="font-size: 12px;">${dateStr}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            }
+        }
+
         this.initNotifications(user.id, role);
     },
 
@@ -552,7 +611,7 @@ const App = {
         window.location.replace('index.html');
     },
 
-    promptPasswordForSettings: function() {
+    promptPassword: function(onSuccessCallback, message = "Please enter your password to proceed.") {
         const oldModal = document.getElementById('passwordPromptModal');
         if (oldModal) { oldModal.remove(); }
 
@@ -565,7 +624,7 @@ const App = {
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body p-4 text-center">
-                        <p class="small text-muted mb-3">Please enter your password to edit your profile.</p>
+                        <p class="small text-muted mb-3">${message}</p>
                         <div id="passwordPromptAlert" class="alert d-none small p-2" role="alert"></div>
                         <form id="passwordPromptForm">
                             <input type="password" class="form-control mb-3 text-center bg-light" id="passwordPromptInput" required placeholder="Enter password">
@@ -611,12 +670,16 @@ const App = {
             } else {
                 modal.hide();
                 setTimeout(() => {
-                    App.openSettingsModal();
+                    if(typeof onSuccessCallback === 'function') onSuccessCallback();
                 }, 400);
             }
         });
         
         modal.show();
+    },
+
+    promptPasswordForSettings: function() {
+        this.promptPassword(() => App.openSettingsModal(), "Please enter your password to access your settings.");
     },
 
     openSettingsModal: function() {

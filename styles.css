@@ -181,3 +181,13 @@ body {
 .animate__animated.animate__swing {
     animation: bellShake 0.8s ease-in-out;
 }
+
+/* Dropdown Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.dropdown-menu {
+    animation: fadeIn 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transform-origin: top;
+}

@@ -97,7 +97,10 @@
                                 <label class="form-label fw-semibold text-muted small">Password</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-lock text-muted"></i></span>
-                                    <input type="password" class="form-control border-start-0 bg-light" id="regPassword" required placeholder="Create a strong password">
+                                    <input type="password" class="form-control border-start-0 border-end-0 bg-light" id="regPassword" required placeholder="Create a strong password">
+                                    <button class="btn btn-outline-secondary bg-light border-start-0" type="button" id="toggleRegPassword" style="border-color: #dee2e6;">
+                                        <i class="fa-regular fa-eye text-muted" id="toggleRegPasswordIcon"></i>
+                                    </button>
                                 </div>
                             </div>
                             <div class="col-12">
@@ -206,6 +209,24 @@
                 redirectIfAuthenticated();
             }
         });
+
+        const toggleRegPassword = document.getElementById('toggleRegPassword');
+        const regPasswordInput = document.getElementById('regPassword');
+        const toggleRegPasswordIcon = document.getElementById('toggleRegPasswordIcon');
+
+        if (toggleRegPassword) {
+            toggleRegPassword.addEventListener('click', function () {
+                const type = regPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                regPasswordInput.setAttribute('type', type);
+                if (type === 'text') {
+                    toggleRegPasswordIcon.classList.remove('fa-eye');
+                    toggleRegPasswordIcon.classList.add('fa-eye-slash');
+                } else {
+                    toggleRegPasswordIcon.classList.remove('fa-eye-slash');
+                    toggleRegPasswordIcon.classList.add('fa-eye');
+                }
+            });
+        }
 
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
