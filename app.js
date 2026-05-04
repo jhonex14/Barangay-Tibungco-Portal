@@ -59,15 +59,22 @@ const App = {
             }
         }
 
-        // 2. Network Check (Forces a refresh of your role)
-        const { data: { session: initialSession } } = await supabaseClient.auth.getSession();
-        this.updateUserMenu(initialSession ? initialSession.user : null);
+        // 2. Network Check (Forces a refresh of your data)
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        this.updateUserMenu(user);
 
         supabaseClient.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_OUT') {
                 localStorage.removeItem('user_profile');
             }
-            this.updateUserMenu(session ? session.user : null);
+            // Trigger a manual fetch to ensure we have the latest metadata
+            if (session) {
+                supabaseClient.auth.getUser().then(({ data }) => {
+                    this.updateUserMenu(data.user);
+                });
+            } else {
+                this.updateUserMenu(null);
+            }
         });
     },
 
@@ -80,14 +87,15 @@ const App = {
             const localSessionId = localStorage.getItem('local_session_id');
             const remoteSessionId = user.user_metadata?.active_session_id;
 
-            if (remoteSessionId && localSessionId && localSessionId !== remoteSessionId) {
+            // If the database has an active session recorded, but our browser doesn't match it
+            if (remoteSessionId && localSessionId !== remoteSessionId) {
                 // Another device logged in and took over!
                 console.warn("Session hijacked by another device! Forcing logout.");
                 await supabaseClient.auth.signOut();
                 localStorage.removeItem('local_session_id');
                 localStorage.removeItem('user_profile');
                 alert("You have been securely logged out because your account was accessed from another device or browser.");
-                window.location.href = 'login.html';
+                window.location.replace('login.html');
                 return;
             }
 
