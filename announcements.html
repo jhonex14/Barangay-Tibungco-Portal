@@ -59,7 +59,7 @@
     <div class="modal fade" id="announcementDetailModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-                <div id="modalAnnImage" class="w-100" style="height: 300px; background: center/cover; display: none;"></div>
+                <img id="modalAnnImage" class="w-100" style="height: 300px; object-fit: cover; display: none;" onerror="this.style.display='none'">
                 <div class="modal-header border-0 pb-0">
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -162,12 +162,10 @@
             document.getElementById('modalAnnContent').textContent = ann.content;
 
             const modalImg = document.getElementById('modalAnnImage');
-            if (ann.image_url) {
-                modalImg.style.backgroundImage = `url('${ann.image_url}')`;
-                modalImg.style.display = 'block';
-            } else {
-                modalImg.style.display = 'none';
-            }
+            const finalImageUrl = (ann.image_url && ann.image_url.trim() !== '') ? ann.image_url : 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80';
+            
+            modalImg.src = finalImageUrl;
+            modalImg.style.display = 'block';
 
             const modal = new bootstrap.Modal(document.getElementById('announcementDetailModal'));
             modal.show();

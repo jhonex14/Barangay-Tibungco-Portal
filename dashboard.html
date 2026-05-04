@@ -410,8 +410,9 @@
                                 <thead class="text-muted small text-uppercase">
                                     <tr>
                                         <th>Full Name</th>
-                                        <th>Purok / Complete Address</th>
-                                        <th>Phone Number</th>
+                                        <th>Complete Address</th>
+                                        <th>Demographics</th>
+                                        <th>Contact Info</th>
                                         <th>Verification Status</th>
                                     </tr>
                                 </thead>
@@ -1277,7 +1278,7 @@
 
         async function loadResidents() {
             const tbody = document.getElementById('residentsTableBody');
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading Residents...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading Residents...</td></tr>';
 
             const { data: residents, error } = await supabaseClient
                 .from('profiles')
@@ -1286,13 +1287,13 @@
                 .order('full_name', { ascending: true });
 
             if (error) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Error: ${error.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error: ${error.message}</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = '';
             if (residents.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No residents found.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No residents found.</td></tr>';
                 return;
             }
 
@@ -1300,8 +1301,18 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="fw-bold text-dark">${escapeHtml(res.full_name || 'N/A')}</td>
-                    <td><span class="badge bg-light text-dark border"><i class="fa-solid fa-location-dot me-1 text-primary"></i>${escapeHtml(res.purok || 'N/A')}</span></td>
-                    <td class="small text-muted font-monospace">${escapeHtml(res.phone || 'N/A')}</td>
+                    <td>
+                        <div class="small fw-semibold text-dark mb-1">${escapeHtml(res.address || 'N/A')}</div>
+                        <span class="badge bg-light text-dark border"><i class="fa-solid fa-location-dot me-1 text-primary"></i>${escapeHtml(res.purok || 'N/A')}</span>
+                    </td>
+                    <td class="small text-muted">
+                        <div>Age: <span class="fw-semibold text-dark">${res.age || 'N/A'}</span></div>
+                        <div>Status: <span class="fw-semibold text-dark">${escapeHtml(res.civil_status || 'N/A')}</span></div>
+                    </td>
+                    <td class="small text-muted font-monospace">
+                        <div class="mb-1"><i class="fa-solid fa-phone me-1"></i>${escapeHtml(res.phone || 'N/A')}</div>
+                        <div><i class="fa-solid fa-envelope me-1"></i>${escapeHtml(res.email || 'N/A')}</div>
+                    </td>
                     <td><span class="badge bg-success-soft text-success rounded-pill px-3"><i class="fa-solid fa-circle-check me-1"></i>Verified</span></td>
                 `;
                 tbody.appendChild(tr);
@@ -1312,12 +1323,14 @@
             const query = document.getElementById('residentSearch').value.toLowerCase();
             const rows = document.querySelectorAll('#residentsTableBody tr');
             rows.forEach(row => {
-                const name = row.cells[0].textContent.toLowerCase();
-                const purok = row.cells[1].textContent.toLowerCase();
-                if (name.includes(query) || purok.includes(query)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
+                if (row.cells.length >= 2) {
+                    const name = row.cells[0].textContent.toLowerCase();
+                    const purok = row.cells[1].textContent.toLowerCase();
+                    if (name.includes(query) || purok.includes(query)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
                 }
             });
         };

@@ -170,7 +170,7 @@ const App = {
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2">
                             <li><a class="dropdown-item py-2" href="resident-dashboard.html"><i class="fa-solid fa-id-card me-2 text-muted"></i>My Profile</a></li>
                             <li><a class="dropdown-item py-2" href="services.html"><i class="fa-solid fa-file-invoice me-2 text-muted"></i>Request Service</a></li>
-                            <li><a class="dropdown-item py-2" href="#" onclick="App.openSettingsModal()"><i class="fa-solid fa-gear me-2 text-muted"></i>Settings</a></li>
+                            <li><a class="dropdown-item py-2" href="#" onclick="App.promptPasswordForSettings()"><i class="fa-solid fa-gear me-2 text-muted"></i>Settings</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item py-2 text-danger" href="#" onclick="App.logout()"><i class="fa-solid fa-arrow-right-from-bracket me-2"></i>Logout</a></li>
                         </ul>
@@ -550,6 +550,73 @@ const App = {
         localStorage.removeItem('user_profile');
         await supabaseClient.auth.signOut();
         window.location.replace('index.html');
+    },
+
+    promptPasswordForSettings: function() {
+        const oldModal = document.getElementById('passwordPromptModal');
+        if (oldModal) { oldModal.remove(); }
+
+        const modalHtml = `
+        <div class="modal fade" id="passwordPromptModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                    <div class="modal-header bg-primary text-white border-0 py-3 px-4">
+                        <h6 class="modal-title fw-bold"><i class="fa-solid fa-lock me-2"></i>Security Check</h6>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4 text-center">
+                        <p class="small text-muted mb-3">Please enter your password to edit your profile.</p>
+                        <div id="passwordPromptAlert" class="alert d-none small p-2" role="alert"></div>
+                        <form id="passwordPromptForm">
+                            <input type="password" class="form-control mb-3 text-center bg-light" id="passwordPromptInput" required placeholder="Enter password">
+                            <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold w-100 text-dark">Verify</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modalEl = document.getElementById('passwordPromptModal');
+        const modal = new bootstrap.Modal(modalEl);
+        
+        document.getElementById('passwordPromptForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('passwordPromptInput').value;
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            btn.disabled = true;
+            
+            const alertBox = document.getElementById('passwordPromptAlert');
+            alertBox.classList.add('d-none');
+            
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if(!user) {
+                window.location.replace('login.html');
+                return;
+            }
+            
+            const { error } = await supabaseClient.auth.signInWithPassword({
+                email: user.email,
+                password: password
+            });
+            
+            if(error) {
+                alertBox.className = 'alert alert-danger small p-2 mt-2 mb-3';
+                alertBox.textContent = 'Incorrect password.';
+                alertBox.classList.remove('d-none');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            } else {
+                modal.hide();
+                setTimeout(() => {
+                    App.openSettingsModal();
+                }, 400);
+            }
+        });
+        
+        modal.show();
     },
 
     openSettingsModal: function() {
