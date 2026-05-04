@@ -275,19 +275,35 @@ const App = {
                     });
                 });
             } else {
-                const { data: reqs } = await supabaseClient.from('requests').select('*').eq('user_id', userId).neq('status', 'Pending').order('created_at', { ascending: false }).limit(5);
+                // Fetch recent requests to check for status updates or remarks
+                const { data: reqs } = await supabaseClient.from('requests').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(10);
                 const { data: comps } = await supabaseClient.from('complaints').select('*').eq('user_id', userId).neq('status', 'Pending').order('created_at', { ascending: false }).limit(5);
 
                 (reqs || []).forEach(r => {
-                    allNotifs.push({
-                        title: 'Document Update',
-                        text: `Your ${escapeHtml(r.type)} is now <strong>${escapeHtml(r.status)}</strong>`,
-                        time: new Date(r.updated_at || r.created_at),
-                        timestamp: new Date(r.updated_at || r.created_at).getTime(),
-                        icon: 'fa-file-invoice',
-                        color: 'text-success',
-                        link: 'resident-dashboard.html'
-                    });
+                    // Only notify if status changed from Pending or if there's a note
+                    if (r.status !== 'Pending') {
+                        allNotifs.push({
+                            title: 'Document Update',
+                            text: `Your ${escapeHtml(r.type)} is now <strong>${escapeHtml(r.status)}</strong>`,
+                            time: new Date(r.updated_at || r.created_at),
+                            timestamp: new Date(r.updated_at || r.created_at).getTime(),
+                            icon: 'fa-file-invoice',
+                            color: 'text-success',
+                            link: 'resident-dashboard.html'
+                        });
+                    }
+                    
+                    if (r.remarks && r.remarks.trim() !== '') {
+                        allNotifs.push({
+                            title: 'Admin Note Added',
+                            text: `Note on ${escapeHtml(r.type)}: ${escapeHtml(r.remarks)}`,
+                            time: new Date(r.updated_at || r.created_at),
+                            timestamp: new Date(r.updated_at || r.created_at).getTime() + 1, // Make it appear slightly newer so it stacks nicely
+                            icon: 'fa-comment-dots',
+                            color: 'text-info',
+                            link: 'resident-dashboard.html'
+                        });
+                    }
                 });
 
                 (comps || []).forEach(c => {
@@ -396,9 +412,13 @@ const App = {
                 }
             } else {
                 title = 'Request Updated';
-                text = `Your request status changed to <strong>${record.status || 'updated'}</strong>`;
-                icon = 'fa-circle-check';
-                color = 'text-success';
+                let statusText = `Your request is now <strong>${escapeHtml(record.status || 'updated')}</strong>`;
+                let noteText = (payload.table === 'requests' && record.remarks && record.remarks.trim() !== '') 
+                               ? `<br>Note: ${escapeHtml(record.remarks)}` 
+                               : '';
+                text = statusText + noteText;
+                icon = (noteText) ? 'fa-comment-dots' : 'fa-circle-check';
+                color = (noteText) ? 'text-info' : 'text-success';
                 link = 'resident-dashboard.html';
             }
 
@@ -431,6 +451,11 @@ const App = {
 
             // Show toast notification
             self.showToast(payload, role);
+
+            // Real-time table update if the user is on the dashboard
+            if (typeof window.loadDashboardData === 'function') {
+                window.loadDashboardData();
+            }
         };
 
         if (role === 'admin') {
@@ -477,9 +502,13 @@ const App = {
             }
         } else {
             title = 'Request Updated';
-            message = `Your request status changed to ${record.status || 'updated'}`;
-            icon = 'fa-circle-check';
-            color = 'text-success';
+            let statusMsg = `Your request status changed to ${record.status || 'updated'}`;
+            let noteMsg = (payload.table === 'requests' && record.remarks && record.remarks.trim() !== '') 
+                           ? ` - Note: ${record.remarks}` 
+                           : '';
+            message = statusMsg + noteMsg;
+            icon = (noteMsg) ? 'fa-comment-dots' : 'fa-circle-check';
+            color = (noteMsg) ? 'text-info' : 'text-success';
         }
 
         const toastId = 'toast_' + Date.now();
@@ -593,6 +622,26 @@ const App = {
                                                     <input type="email" class="form-control" id="userSettingsEmail" disabled>
                                                 </div>
                                             </div>
+                                            <div class="row g-2 mb-3">
+                                                <div class="col-4">
+                                                    <label class="form-label fw-semibold small text-muted">Age</label>
+                                                    <input type="number" class="form-control" id="userSettingsAge" placeholder="18">
+                                                </div>
+                                                <div class="col-8">
+                                                    <label class="form-label fw-semibold small text-muted">Civil Status</label>
+                                                    <select class="form-select" id="userSettingsCivilStatus">
+                                                        <option value="">Select...</option>
+                                                        <option value="Single">Single</option>
+                                                        <option value="Married">Married</option>
+                                                        <option value="Widowed">Widowed</option>
+                                                        <option value="Legally Separated">Legally Separated</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold small text-muted">Complete Address</label>
+                                                <input type="text" class="form-control" id="userSettingsAddress" placeholder="123 Street Name, Brgy. Tibungco">
+                                            </div>
                                             <div class="mb-3">
                                                 <label class="form-label fw-semibold small text-muted">Purok / Zone</label>
                                                 <input type="text" class="form-control" id="userSettingsPurok" placeholder="e.g. Purok 1">
@@ -669,7 +718,14 @@ const App = {
             const alertBox = document.getElementById('userSettingsAlert');
             const btn = this.querySelector('button'); btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
             const { data: { user } } = await supabaseClient.auth.getUser();
-            const { error } = await supabaseClient.from('profiles').update({ full_name: document.getElementById('userSettingsName').value, phone: document.getElementById('userSettingsPhone').value || null, purok: document.getElementById('userSettingsPurok').value || null }).eq('id', user.id);
+            const { error } = await supabaseClient.from('profiles').update({ 
+                full_name: document.getElementById('userSettingsName').value, 
+                phone: document.getElementById('userSettingsPhone').value || null, 
+                purok: document.getElementById('userSettingsPurok').value || null,
+                age: document.getElementById('userSettingsAge').value || null,
+                civil_status: document.getElementById('userSettingsCivilStatus').value || null,
+                address: document.getElementById('userSettingsAddress').value || null
+            }).eq('id', user.id);
             if (error) { alertBox.className = 'alert alert-danger'; alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark me-2"></i>' + error.message; }
             else { alertBox.className = 'alert alert-success'; alertBox.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>Profile updated!'; localStorage.removeItem('user_profile'); }
             alertBox.classList.remove('d-none'); btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i>Save Changes';
@@ -722,11 +778,14 @@ const App = {
                 document.getElementById('userSettingsUid').textContent = user.id;
                 document.getElementById('userSettingsCreated').textContent = user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '\u2014';
                 document.getElementById('userSettingsLastLogin').textContent = user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '\u2014';
-                const { data: profile } = await supabaseClient.from('profiles').select('full_name, phone, purok, role, avatar_url').eq('id', user.id).single();
+                const { data: profile } = await supabaseClient.from('profiles').select('full_name, phone, purok, age, civil_status, address, role, avatar_url').eq('id', user.id).single();
                 if (profile) {
                     document.getElementById('userSettingsName').value = profile.full_name || '';
                     document.getElementById('userSettingsPhone').value = profile.phone || '';
                     document.getElementById('userSettingsPurok').value = profile.purok || '';
+                    document.getElementById('userSettingsAge').value = profile.age || '';
+                    document.getElementById('userSettingsCivilStatus').value = profile.civil_status || '';
+                    document.getElementById('userSettingsAddress').value = profile.address || '';
                     document.getElementById('userSettingsRole').textContent = (profile.role || 'resident').charAt(0).toUpperCase() + (profile.role || 'resident').slice(1);
                     document.getElementById('userSettingsRole').className = profile.role === 'admin' ? 'badge bg-primary rounded-pill px-3' : 'badge bg-success rounded-pill px-3';
                     // Load avatar

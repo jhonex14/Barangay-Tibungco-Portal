@@ -46,9 +46,15 @@
             </div>
         </div>
 
+        <!-- Notifications Area -->
+        <div class="row">
+            <div class="col-12" id="notificationsArea"></div>
+        </div>
+
+
         <div class="row g-4">
             <!-- Stats -->
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
                     <div class="card-body p-4 d-flex align-items-center">
                         <div class="icon-circle bg-primary-soft text-primary me-3" style="width: 60px; height: 60px;">
@@ -61,7 +67,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
                     <div class="card-body p-4 d-flex align-items-center">
                         <div class="icon-circle bg-danger-soft text-danger me-3" style="width: 60px; height: 60px;">
@@ -72,12 +78,6 @@
                             <h3 class="fw-bold mb-0" id="activeReportsCount">0</h3>
                         </div>
                     </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm rounded-4 h-100 bg-primary text-white text-center d-flex justify-content-center align-items-center p-4">
-                    <h5 class="fw-bold mb-3">Need a new document?</h5>
-                    <a href="services.html" class="btn btn-warning fw-bold text-dark w-100 rounded-pill shadow-sm">Request Now</a>
                 </div>
             </div>
         </div>
@@ -142,6 +142,57 @@
             </div>
 
             <div class="col-lg-4">
+                <!-- User Profile Card -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+                    <div class="bg-primary text-center pt-4 pb-5 position-relative" style="background: linear-gradient(135deg, #0f4c81 0%, #1e3c72 100%);">
+                        <div class="position-absolute top-0 end-0 p-3">
+                            <button class="btn btn-sm btn-light rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width:32px;height:32px;" onclick="App.openSettingsModal()" title="Edit Profile">
+                                <i class="fa-solid fa-pen text-primary" style="font-size: 12px;"></i>
+                            </button>
+                        </div>
+                        <img src="https://ui-avatars.com/api/?name=U&background=0f4c81&color=fff&size=80" id="dashboardAvatar" alt="Avatar" class="rounded-circle shadow border border-3 border-white position-absolute start-50 translate-middle-x" style="width: 80px; height: 80px; object-fit: cover; bottom: -40px; background: white;">
+                    </div>
+                    <div class="card-body pt-5 pb-4 text-center">
+                        <h5 class="fw-bold mb-1 mt-2" id="dashboardName">Loading...</h5>
+                        <p class="small text-muted mb-3" id="dashboardEmail">...</p>
+                        <span class="badge bg-success text-uppercase px-3 py-2 rounded-pill shadow-sm mb-4">Resident</span>
+                        
+                        <div class="text-start bg-light rounded-4 p-3 border border-light shadow-sm">
+                            <div class="row g-2">
+                                <div class="col-12 border-bottom pb-2 mt-2">
+                                    <span class="text-muted small d-block mb-1" style="font-size: 11px;"><i class="fa-solid fa-phone me-2 text-primary"></i>Phone</span>
+                                    <span class="fw-semibold small" id="dashboardPhone">...</span>
+                                </div>
+                                <div class="col-12 border-bottom pb-2 mt-2">
+                                    <span class="text-muted small d-block mb-1" style="font-size: 11px;"><i class="fa-solid fa-map me-2 text-success"></i>Address</span>
+                                    <span class="fw-semibold small" id="dashboardAddress">...</span>
+                                </div>
+                                <div class="col-6 border-bottom pb-2 mt-2">
+                                    <span class="text-muted small d-block mb-1" style="font-size: 11px;"><i class="fa-solid fa-location-dot me-2 text-danger"></i>Zone / Purok</span>
+                                    <span class="fw-semibold small" id="dashboardPurok">...</span>
+                                </div>
+                                <div class="col-6 border-bottom pb-2 mt-2">
+                                    <span class="text-muted small d-block mb-1" style="font-size: 11px;"><i class="fa-solid fa-calendar-days me-2 text-info"></i>Age</span>
+                                    <span class="fw-semibold small" id="dashboardAge">...</span>
+                                </div>
+                                <div class="col-6 border-bottom pb-2 mt-2">
+                                    <span class="text-muted small d-block mb-1" style="font-size: 11px;"><i class="fa-solid fa-ring me-2 text-secondary"></i>Civil Status</span>
+                                    <span class="fw-semibold small" id="dashboardCivilStatus">...</span>
+                                </div>
+                                <div class="col-6 pb-1 mt-2">
+                                    <span class="text-muted small d-block mb-1" style="font-size: 11px;"><i class="fa-solid fa-calendar-day me-2 text-warning"></i>Member Since</span>
+                                    <span class="fw-semibold small" id="dashboardCreated">...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 bg-primary text-white text-center p-4 mb-4">
+                    <h5 class="fw-bold mb-3">Need a new document?</h5>
+                    <a href="services.html" class="btn btn-warning fw-bold text-dark w-100 rounded-pill shadow-sm">Request Now</a>
+                </div>
+
                 <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
                         <h5 class="fw-bold mb-0">Announcements</h5>
@@ -175,17 +226,30 @@
     <script src="app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            if (!user) {
-                window.location.href = 'login.html';
-                return;
-            }
+            window.loadDashboardData = async () => {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
 
-            // Get Profile
-            const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', user.id).single();
-            if (profile) {
-                document.getElementById('welcomeMsg').textContent = `Welcome back, ${profile.full_name.split(' ')[0]}!`;
-            }
+                // Get Profile
+                const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', user.id).single();
+                if (profile) {
+                    document.getElementById('welcomeMsg').textContent = `Welcome back, ${profile.full_name.split(' ')[0]}!`;
+                    
+                    document.getElementById('dashboardName').textContent = profile.full_name;
+                    document.getElementById('dashboardEmail').textContent = user.email;
+                    document.getElementById('dashboardPhone').textContent = profile.phone || 'Not provided';
+                    document.getElementById('dashboardAddress').textContent = profile.address || 'Not provided';
+                    document.getElementById('dashboardPurok').textContent = profile.purok || 'Not provided';
+                    document.getElementById('dashboardAge').textContent = profile.age || 'Not provided';
+                    document.getElementById('dashboardCivilStatus').textContent = profile.civil_status || 'Not provided';
+                    document.getElementById('dashboardCreated').textContent = new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                    
+                    const avatarFallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || 'U')}&background=0f4c81&color=fff&size=80`;
+                    document.getElementById('dashboardAvatar').src = profile.avatar_url || avatarFallback;
+                }
             
             // Load My Requests
             const { data: myRequests } = await supabaseClient
@@ -196,11 +260,19 @@
             
             const tbody = document.getElementById('requestsTableBody');
             const noDataMsg = document.getElementById('noRequestsMsg');
+            const notificationsArea = document.getElementById('notificationsArea');
+            
+            tbody.innerHTML = '';
+            notificationsArea.innerHTML = '';
             
             if (!myRequests || myRequests.length === 0) {
                 noDataMsg.classList.remove('d-none');
             } else {
                 noDataMsg.classList.add('d-none');
+                
+                // Get dismissed notes from localStorage
+                let dismissedNotes = JSON.parse(localStorage.getItem('dismissedAdminNotes') || '[]');
+
                 myRequests.forEach(req => {
                     const tr = document.createElement('tr');
                     let badgeClass = 'bg-secondary';
@@ -221,8 +293,35 @@
                         <td class="small text-truncate" style="max-width: 220px;">${noteText}</td>
                     `;
                     tbody.appendChild(tr);
+
+                    // Check for admin notes
+                    const noteHash = req.id + '|' + btoa(unescape(encodeURIComponent(req.remarks || '')));
+                    if (req.remarks && req.remarks.trim() !== '' && !dismissedNotes.includes(noteHash)) {
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert alert-info alert-dismissible fade show shadow-sm border-0 border-start border-info border-4';
+                        alertDiv.innerHTML = `
+                            <div class="d-flex align-items-center">
+                                <i class="fa-solid fa-bell fs-4 text-info me-3"></i>
+                                <div>
+                                    <h6 class="mb-1 fw-bold">Admin Note on ${req.type} (${req.tracking_id})</h6>
+                                    <p class="mb-0 small">${escapeHtml(req.remarks)}</p>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissNote('${noteHash}')"></button>
+                        `;
+                        notificationsArea.appendChild(alertDiv);
+                    }
                 });
             }
+
+            // Function to dismiss note permanently
+            window.dismissNote = function(noteHash) {
+                let dismissedNotes = JSON.parse(localStorage.getItem('dismissedAdminNotes') || '[]');
+                if (!dismissedNotes.includes(noteHash)) {
+                    dismissedNotes.push(noteHash);
+                    localStorage.setItem('dismissedAdminNotes', JSON.stringify(dismissedNotes));
+                }
+            };
 
             // Load My Reports
             const { data: myReports } = await supabaseClient
@@ -234,6 +333,8 @@
             const reportsTbody = document.getElementById('reportsTableBody');
             const noReportsMsg = document.getElementById('noReportsMsg');
             
+            reportsTbody.innerHTML = '';
+
             if (!myReports || myReports.length === 0) {
                 noReportsMsg.classList.remove('d-none');
             } else {
@@ -262,6 +363,9 @@
             const { count: reportCount } = await supabaseClient.from('complaints').select('*', { count: 'exact', head: true }).eq('user_id', user.id).neq('status', 'Resolved');
             document.getElementById('activeReportsCount').textContent = reportCount || 0;
 
+            };
+
+            await window.loadDashboardData();
         });
     </script>
     <script src="chatbot.js"></script>

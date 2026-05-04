@@ -698,8 +698,44 @@
                 </div>
             </div>
 
+            <style>
+                /* Responsive Admin Chat */
+                @media (max-width: 768px) {
+                    .floating-chat-modal {
+                        width: 95vw !important;
+                        height: 85vh !important;
+                        bottom: 10px !important;
+                        right: 2.5vw !important;
+                        max-width: none !important;
+                    }
+                    .chat-list-pane {
+                        width: 100% !important;
+                        min-width: 100% !important;
+                        border-right: none !important;
+                    }
+                    .chat-active .chat-list-pane {
+                        display: none !important;
+                    }
+                    .chat-area-pane {
+                        width: 100% !important;
+                        display: none !important;
+                    }
+                    .chat-active .chat-area-pane {
+                        display: flex !important;
+                    }
+                    .mobile-chat-back {
+                        display: block !important;
+                    }
+                }
+                @media (min-width: 769px) {
+                    .mobile-chat-back {
+                        display: none !important;
+                    }
+                }
+            </style>
+
             <!-- Live Chat Floating Modal -->
-            <div id="chatSection" class="floating-chat-modal" style="display: none; position: fixed; bottom: 20px; right: 20px; width: 750px; height: 500px; background: white; border-radius: 12px; box-shadow: 0 15px 50px rgba(0,0,0,0.3); z-index: 1050; overflow: hidden; border: 1px solid #ddd; flex-direction: column;">
+            <div id="chatSection" class="floating-chat-modal" style="display: none; position: fixed; bottom: 20px; right: 20px; width: 750px; max-width: 90vw; height: 500px; background: white; border-radius: 12px; box-shadow: 0 15px 50px rgba(0,0,0,0.3); z-index: 1050; overflow: hidden; border: 1px solid #ddd; flex-direction: column;">
                 <div class="bg-primary text-white p-2 d-flex justify-content-between align-items-center" style="cursor: default;">
                     <h6 class="mb-0 ms-2 fw-bold"><i class="fa-solid fa-comments me-2"></i>Live Chat Admin</h6>
                     <div>
@@ -707,9 +743,9 @@
                         <button class="btn btn-sm text-white opacity-75 hover-opacity-100" onclick="closeAdminChat()"><i class="fa-solid fa-times"></i></button>
                     </div>
                 </div>
-                <div class="d-flex" style="height: calc(100% - 40px);">
+                <div class="d-flex w-100" style="height: calc(100% - 40px);">
                     <!-- Conversations List -->
-                    <div class="bg-white border-end" style="width: 280px; min-width: 280px;">
+                    <div class="bg-white border-end chat-list-pane" style="width: 280px; min-width: 280px; height: 100%;">
                         <div class="p-2 border-bottom bg-light">
                             <h6 class="fw-bold mb-0 text-primary small"><i class="fa-solid fa-inbox me-1"></i> Conversations</h6>
                         </div>
@@ -721,19 +757,20 @@
                         </div>
                     </div>
                     <!-- Chat Area -->
-                    <div class="flex-grow-1 d-flex flex-column bg-light">
+                    <div class="flex-grow-1 d-flex flex-column bg-light chat-area-pane" style="height: 100%;">
                         <div id="chatAreaHeader" class="p-2 bg-white border-bottom d-flex align-items-center" style="display:none !important;">
+                            <button class="btn btn-sm btn-light me-2 mobile-chat-back" onclick="closeMobileChatView()"><i class="fa-solid fa-chevron-left"></i></button>
                             <img id="chatUserAvatar" src="https://ui-avatars.com/api/?name=U&background=0f4c81&color=fff&size=30" class="rounded-circle me-2" width="30" height="30" style="object-fit:cover;">
-                            <div>
-                                <h6 class="mb-0 fw-bold small" id="chatUserName">Select a conversation</h6>
-                                <small class="text-muted" id="chatUserEmail" style="font-size:10px;"></small>
+                            <div class="flex-grow-1 min-width-0">
+                                <h6 class="mb-0 fw-bold small text-truncate" id="chatUserName">Select a conversation</h6>
+                                <small class="text-muted text-truncate d-block" id="chatUserEmail" style="font-size:10px;"></small>
                             </div>
                         </div>
                         <div id="adminChatMessages" class="flex-grow-1 p-2" style="overflow-y: auto;">
                             <div class="h-100 d-flex align-items-center justify-content-center text-center text-muted">
                                 <div>
                                     <i class="fa-solid fa-comment-dots fs-1 opacity-25 mb-2 d-block"></i>
-                                    <p class="small">Resident messages will appear here</p>
+                                    <p class="small px-3">Resident messages will appear here</p>
                                 </div>
                             </div>
                         </div>
@@ -1231,6 +1268,11 @@
         function closeAdminChat() {
             document.getElementById('chatSection').style.display = 'none';
             document.getElementById('adminChatBubble').style.display = 'none';
+        }
+
+        function closeMobileChatView() {
+            document.getElementById('chatSection').classList.remove('chat-active');
+            currentChatUserId = null;
         }
 
         async function loadResidents() {
@@ -2167,6 +2209,9 @@
             document.querySelectorAll('.chat-convo-item').forEach(el => el.classList.remove('bg-primary', 'bg-opacity-10'));
             const activeItem = document.getElementById(`convo-${userId}`);
             if (activeItem) activeItem.classList.add('bg-primary', 'bg-opacity-10');
+
+            // Switch to chat view on mobile
+            document.getElementById('chatSection').classList.add('chat-active');
 
             // Load messages between admin and this user
             const { data: msgs } = await supabaseClient
