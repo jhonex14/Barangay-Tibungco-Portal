@@ -3003,6 +3003,38 @@
                             }
                         }
                     })
+                    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, async (payload) => {
+                        const updatedMsg = payload.new;
+                        if (updatedMsg.sender_id === currentChatUserId || updatedMsg.receiver_id === currentChatUserId) {
+                            const msgEl = document.querySelector(`[data-id="${updatedMsg.id}"]`);
+                            if (msgEl) {
+                                // Update Reactions
+                                let reactCont = msgEl.querySelector('.reaction-container');
+                                const reactions = updatedMsg.reactions || {};
+                                
+                                if (Object.keys(reactions).length > 0) {
+                                    if (!reactCont) {
+                                        reactCont = document.createElement('div');
+                                        reactCont.className = 'reaction-container';
+                                        msgEl.querySelector('.px-3').appendChild(reactCont);
+                                    }
+                                    reactCont.innerHTML = '';
+                                    for (const [emo, users] of Object.entries(reactions)) {
+                                        const active = users.includes(user.id) ? 'active' : '';
+                                        reactCont.insertAdjacentHTML('beforeend', `<div class="reaction-badge ${active}" onclick="toggleReaction('${updatedMsg.id}', '${emo}')">${emo} <span>${users.length}</span></div>`);
+                                    }
+                                } else if (reactCont) {
+                                    reactCont.remove();
+                                }
+
+                                // Update Seen status
+                                if (updatedMsg.is_read) {
+                                    const seenEl = msgEl.querySelector('.admin-msg-seen');
+                                    if (seenEl) seenEl.innerHTML = '✓✓ Seen';
+                                }
+                            }
+                        }
+                    })
                     .subscribe();
             }
         }

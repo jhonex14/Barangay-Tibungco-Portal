@@ -802,6 +802,37 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             })
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, async (payload) => {
+                const updatedMsg = payload.new;
+                if (updatedMsg.sender_id === currentUser.id || updatedMsg.receiver_id === currentUser.id) {
+                    const msgEl = document.querySelector(`.chat-msg[data-id="${updatedMsg.id}"]`);
+                    if (msgEl) {
+                        // Update Reactions
+                        let reactCont = msgEl.querySelector('.reaction-container');
+                        const reactions = updatedMsg.reactions || {};
+                        
+                        if (Object.keys(reactions).length > 0) {
+                            if (!reactCont) {
+                                reactCont = document.createElement('div');
+                                reactCont.className = 'reaction-container';
+                                msgEl.appendChild(reactCont);
+                            }
+                            reactCont.innerHTML = '';
+                            for (const [emo, users] of Object.entries(reactions)) {
+                                const active = users.includes(currentUser.id) ? 'active' : '';
+                                reactCont.insertAdjacentHTML('beforeend', `<div class="reaction-badge ${active}" onclick="toggleChatbotReaction('${updatedMsg.id}', '${emo}')">${emo} <span>${users.length}</span></div>`);
+                            }
+                        } else if (reactCont) {
+                            reactCont.remove();
+                        }
+
+                        // Update Seen status
+                        if (updatedMsg.is_read && updatedMsg.sender_id === currentUser.id) {
+                            markMessageSeen(updatedMsg.id);
+                        }
+                    }
+                }
+            })
             .subscribe();
     }
 
